@@ -1,27 +1,29 @@
-% The maximum length of a chess game under the FIDE Laws is 17,697 plies.
+% The maximum length of a chess game under the 2023 FIDE Laws is 17,697 plies.
 %
-% Compile with: tectonic main.tex
-%   (or latexmk -pdf main.tex; plain pdflatex twice also works --- the
-%   bibliography is inline, so no BibTeX pass is needed)
+% Compile with: latexmk -pdf main_revised_polished_v10.tex
+% The bibliography is inline, so no BibTeX pass is required.
 \documentclass[11pt]{article}
 
 \usepackage[T1]{fontenc}
+\usepackage{lmodern}
 \usepackage{amsmath,amssymb,amsthm}
-\usepackage{array}
-\usepackage{booktabs}
-\usepackage{graphicx}
 \usepackage{microtype}
+\usepackage[margin=3.05cm]{geometry}
+\usepackage{needspace}
 \usepackage{xcolor}
 \usepackage{xurl}
-\usepackage[colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
+\usepackage[
+  colorlinks=true,
+  linkcolor=blue!50!black,
+  citecolor=blue!50!black,
+  urlcolor=blue!50!black
+]{hyperref}
 \hypersetup{
-  pdftitle={The maximum length of a chess game under the FIDE Laws is
-    17,697 plies},
-  pdfauthor={Junyeop Yim},
-  pdfkeywords={chess, FIDE Laws of Chess, 75-move rule, longest chess
-    game, combinatorics},
+  pdftitle={The maximum length of a chess game under the 2023 FIDE Laws is 17,697 plies},
+  pdfauthor={Junyeop Yim}
 }
-\usepackage[margin=3.2cm]{geometry}
+\urlstyle{same}
+\emergencystretch=2em
 
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem{lemma}[theorem]{Lemma}
@@ -29,1340 +31,702 @@
 \newtheorem{corollary}[theorem]{Corollary}
 \theoremstyle{definition}
 \newtheorem{definition}[theorem]{Definition}
-\theoremstyle{remark}
-\newtheorem{remark}[theorem]{Remark}
-\theoremstyle{plain}
-\newtheorem*{mainresult}{Main result}
 
-\newcommand{\clock}{c}
+\newcommand{\B}{\mathtt{B}}
+\newcommand{\W}{\mathtt{W}}
 
-\title{The maximum length of a chess game\\ under the FIDE Laws is 17{,}697 plies}
-\author{Junyeop Yim\\[2pt]
-  \small Department of Applied Mathematics, Kongju National University\\[1pt]
-  \small\texttt{junyeobe0315@smail.kongju.ac.kr}}
-\date{7~August 2026}
+\title{The maximum length of a chess game\\
+under the 2023 FIDE Laws is 17{,}697 plies}
+\author{Junyeop Yim\\
+\small Department of Applied Mathematics, Kongju National University\\
+\small \texttt{junyeobe0315@smail.kongju.ac.kr}}
+\date{10 August 2026}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-Under the FIDE Laws of Chess, which end a game automatically on a fivefold
-repetition or when 75 moves by each player pass without a pawn move or a
-capture, the length of a chess game is bounded. Explicit games of
-$17{,}697$ plies ($8{,}848\tfrac12$ moves) had been published, and a
-construction-based count allowed $17{,}699$ plies; to our knowledge, no
-published argument established that ceiling over all games or excluded
-the lengths $17{,}698$ and $17{,}699$. We prove that
-the maximum length of a chess game is exactly $17{,}697$ plies. The upper
-bound is elementary: a pawn move or a capture resets the 75-move counter,
-these moves cut a game into at most $118$ segments, a segment holds at
-most $150$ plies, and one further ply is lost each time the colour making
-the segment-ending moves changes. The heart of the proof shows that a
-game attaining all $118$ segments must change that colour at least three
-times, so that no game exceeds $150 \cdot 118 - 3 = 17{,}697$ plies; the
-equality analysis further forces every maximum-length game to promote all
-sixteen pawns, fill every segment, and change colour exactly three times.
+The FIDE Laws of Chess effective from 1 January 2023 terminate a game
+automatically upon fivefold repetition or after 75 consecutive moves by each
+player without a pawn move or a capture. Legal games of $17{,}697$ plies were
+previously known, while construction-based scheduling analyses gave an
+arithmetic ceiling of $17{,}699$ plies but did not exclude the final two plies.
+We close this gap. Partitioning play at pawn moves
+and captures yields at most $118$ segments. Each segment has length at most
+$150$ plies, and each change in the colour of successive segment endpoints
+reduces this bound by one ply. We prove that a game with all $118$ segments
+must incur at least three such changes. Hence every game has at most
+$150\cdot118-3=17{,}697$ plies, and the known constructions are optimal.
+Moreover, in every maximum-length game, all sixteen pawns make six one-rank
+moves and promote.
 \end{abstract}
 
-\section{Introduction and prior work}\label{sec:intro}
+\section{Introduction}\label{sec:intro}
 
-How long can a game of chess be? Under earlier versions of the Laws the
-question had no finite answer: the draw by threefold repetition and the
-50-move rule must be \emph{claimed} by a player, so two cooperating players
-could continue indefinitely. The unboundedness is classical: Euwe
-\cite{euwe1929} exhibited endless play under the repetition rules of his
-day by rediscovering the cube-free Thue--Morse sequence, an analysis
-taken up in symbolic dynamics by Morse and Hedlund
-\cite{morsehedlund1944}. This changed on 1 July 2014, when FIDE
-introduced two automatic termination rules \cite{fide2014laws}, retained in
-the current Laws \cite{fide2023laws}: the game is drawn, without any claim, when the same
-position occurs five times (Article~9.6.1), or when $75$ consecutive moves
-by each player have been made without the movement of any pawn and without
-any capture (Article~9.6.2)\footnote{The bound of $75$ has a history of
-its own: during the twentieth century the \emph{claimable} 50-move limit
-was repeatedly extended for particular endings --- at one stage to
-exactly $75$ moves for six listed endgames --- before all exceptions
-were abolished; see the entry ``fifty-move law'' of \cite{hooperwhyld}.
-The automatic rule of 2014 is a separate, claim-independent mechanism.}
---- with the proviso that a checkmate delivered
-by the final move takes precedence. The clock rules have teeth: the
-seven-piece endgame tablebases \cite{lomonosov2019} contain forced
-checkmates more than five hundred moves long \cite{top8dtm}, wins that
-Article~9.6.2 erases. Under these Laws the supremum of game
-lengths is finite, and computing it exactly becomes a well-posed
-combinatorial problem --- an extremal companion to the older
-quantitative questions about chess: Shannon's estimates of the number of
-games \cite{shannon1950}, the counting and bounding of positions
-\cite{steinerberger2015,gourion2022,tromppositions}, the complexity of
-the generalised game \cite{fraenkel1981}.
+How long can a game of chess be under the mandatory termination rules? Before
+2014, the answer depended on whether a player chose to claim a draw. Threefold
+repetition and the fifty-move rule were claim-based, so cooperating players
+could decline to claim and continue indefinitely; classical constructions of
+unending play were given by Euwe~\cite{euwe1929} and by Morse and
+Hedlund~\cite{morsehedlund1944}. On 1 July 2014, FIDE introduced automatic
+draws after fivefold repetition and after 75 moves by each player without a
+pawn move or a capture, making the extremal problem finite~\cite{fide2014laws}.
+This paper uses the version of the Laws effective from 1 January
+2023~\cite{fide2023laws}.
 
-The question is older than the automatic rules. For the claim-based
-50-move setting --- under the assumption that the claimable draws are in
-fact invoked --- the answer was worked out by chess problemists over half
-a century: Dawson published the limit of $5{,}900$ moves in 1911
-\cite{dawson1911}, maximum-length problems by Sunyer and H{\o}eg brought
-the attainable value down to $5{,}898$, and Fabel's finer analysis of
-1947 settled the claim-based maximum at $5{,}898\tfrac12$ moves
-\cite{fabel1947}; Britten and later Roycroft treated the variant in
-which the two bare kings play on, as reported in \cite{bonsdorff1974}.
-Heimo's bilingual account \cite{heimo2004} re-examined the claim-based
-maximum under the Laws of 2004 --- finding $5{,}898$ whole moves, an
-exchange over the dead-position article adjusting his final schedule ---
-and closed by observing that with an odd bound ``such as 75'' in place
-of $50$ the answer would become White's $8{,}849$th move: $17{,}697$
-plies, ten years before the 75-move rule existed. The note sketches a
-corresponding construction, but for a hypothetical claim-based rule; we
-have not found in it an argument that every legal game must lose at
-least three plies, and the automatic termination rules under which the
-question becomes unconditional did not yet exist.
-Theorem~\ref{thm:main} supplies that missing universal upper bound. We
-follow the
-account in the mathematical-chess collection of Bonsdorff, Fabel and
-Riihimaa \cite{bonsdorff1974}, where the original sources are cited and
-the count of $118$ draw-postponing opportunities --- $96$ pawn moves plus
-$22$ captures not already among them --- is displayed explicitly. That
-count is the one every later analysis, this paper's included, rests on;
-what the automatic rules changed is the arithmetic built on it.
+The bookkeeping behind the classical problem was developed by chess
+problemists. Bonsdorff, Fabel, and Riihimaa~\cite{bonsdorff1974} summarise the
+count of pawn moves and captures that can postpone the fifty-move draw.
+Heimo~\cite{heimo2004} observed that replacing 50 by 75 in this count gives
+$17{,}697$ plies. After automatic termination was introduced,
+Labelle~\cite{labelle2015longest} and Murphy~\cite{murphy2020longest} exhibited
+legal games of this length. Murphy's critical-move scheduling analysis produced
+an arithmetic ceiling of $17{,}699$ plies and left open whether endpoint parity
+forces a deficit of at least three plies in every game with $118$
+segments~\cite[Secs.~2.1 and~3]{murphy2020longest}. We prove that it does,
+thereby closing the two-ply gap.
 
-For the modern automatic rules the value itself is also not new, and its
-ingredients were assembled in public. The count of $118$ reappeared on the
-Chess.com forums in 2011, together with the parity correction for
-switching colour --- then taken to cost two full moves, via four
-switches \cite{forum2011}; Falkenbach found a three-switch plan for the
-50-move setting in 2012 \cite{forum2011}; and within a year of the
-75-move rule taking effect, Tatzelwurm and Deedlit redid the arithmetic
-under it, Deedlit exhibiting a three-switch schedule and putting its
-length at $17{,}697$ plies \cite{forum2015}. Labelle
-\cite{labelle2015longest} collected and sharpened this in 2015: counting
-the $118$ \emph{delay plies}, crediting the schedules, generating a
-complete $17{,}697$-ply game, and stating, as a belief supported by the
-constructions, that the maximum is
-$118 \times 75.0 - 3 \times 0.5 = 8{,}848\tfrac12$ moves; his page also
-records the claim-based value $5{,}898\tfrac12$, agreeing with Fabel.
-Murphy \cite{murphy2020longest} later published a separate, hand-designed
-complete game of the same length --- the \emph{reference game} verified
-in Appendix~\ref{app:witness} --- together with a construction-based
-count allowing $17{,}699$ plies, but not a proof that this ceiling
-holds for arbitrary games, and posed the exact
-maximum as an open question: ``We
-clearly need at least one switch \dots\ but is it possible to do it with
-only two? If not, can this lower bound be proved?'' Tromp's reference
-note \cite{tromp-longest} records the value, and Bolton's talk
-\cite{bolton2021} presents the construction. The explicit games of
-\cite{labelle2015longest} and \cite{murphy2020longest} establish the
-lower bound $17{,}697$; no published argument excludes $17{,}698$ or
-$17{,}699$, and to our knowledge no proof of optimality has appeared.
-This paper supplies one:
+Throughout, we disregard time forfeiture and optional endings such as
+resignation, agreement, and claimable draws. Play is continued from the
+standard initial position until the first mandatory termination condition under
+the 2023 Laws applies.
 
-\begin{mainresult}
-Under the usual rules of chess --- checkmate, stalemate, dead positions
---- together with the automatic fivefold-repetition and 75-move draws in
-force since 2014, no legal game lasts more than $17{,}697$ plies
-(Theorem~\ref{thm:main}); the bound is attained by the published games,
-so the maximum length of a chess game is exactly $17{,}697$ plies
-(Corollary~\ref{cor:exact}).
-\end{mainresult}
+\begin{theorem}\label{thm:main}
+Under the FIDE Laws of Chess effective from 1 January 2023, every legal move
+sequence from the standard initial position, continued until the first
+mandatory termination condition applies, has length at most $17{,}697$ plies.
+This bound is attained.
+\end{theorem}
 
-In the notation of the On-Line Encyclopedia of Integer Sequences, the
-result says precisely that the game-counting sequence A048987
-\cite{oeisA048987} has finite support, with last nonzero term
-$a(17697)$.
+Equivalently, a maximum-length game consists of $8{,}848$ complete move pairs
+followed by one additional White ply.
 
-Relative to the prior analyses the new content lies in the upper bound,
-and it is twofold. First, the count of $118$ must be turned into a bound
-over \emph{all} games: a game need not promote every pawn, so the
-deduction of eight overlapping moves cannot be read off the intended
-construction and must be derived --- Proposition~\ref{prop:pminuso}
-couples the pawn-move and overlap counts through the number of resolved
-files, giving $P - O \le 88$ for every game --- and the thirtieth
-capture interacts with the end of the game (Lemma~\ref{lem:ct30}).
-Second, and this is the bulk of the paper, the three half-move losses
-are proved unavoidable: no ordering of the critical moves of any
-$118$-segment game achieves fewer than three colour changes
-(Theorem~\ref{thm:s3}). The equality analysis comes free and is recorded
-as Corollary~\ref{cor:structure}: a maximum-length game promotes all
-sixteen
-pawns, fills every segment to its target length, and changes colour
-exactly three times --- always in the same order, its critical-move and
-endpoint patterns both being $\mathsf{BWBW}$.
+The proof of the upper bound reduces to three estimates. Write $L$ for the
+game length. A \emph{critical move} is a pawn move or a capture, and critical
+moves divide a game into segments. If $K$ is the number of segments and $S$
+counts changes in the colour of successive segment endpoints, with the start
+of play assigned
+Black parity, then
+\begin{equation}\label{eq:outline}
+  L\le150K-S,\qquad
+  K\le118,\qquad
+  K=118\Longrightarrow S\ge3.
+\end{equation}
+The first estimate follows from the seventy-five-move rule and the parity of
+segment endpoints. The second couples the number of pawn moves to the number
+of pawn captures and then counts the capturable initial pieces. Equality in the
+second estimate forces all sixteen pawns to make six moves and at least $29$
+captures to occur. These conditions exclude every critical-move block pattern
+with at most three blocks and yield the third estimate.
 
-\paragraph{The shape of the proof.}
-A \emph{critical move} --- a pawn move or a capture --- resets the 75-move
-counter and is irreversible. Critical moves cut a game into \emph{segments},
-each holding at most $149$ reversible plies plus the critical move that ends
-it, so a game with $K$ segments has at most $150K$ plies; a parity argument
-lowers this bound by one further ply each time the \emph{colour} making the
-segment-ending moves changes, giving $L \le 150K - S$
-(Lemma~\ref{lem:decomposition}). Counting pawn moves and captures yields
-$K \le 118$ (Theorem~\ref{thm:k118}), and $150 \cdot 118 - 1 = 17{,}699$ is
-the ceiling of \cite{murphy2020longest}. The remaining two plies are
-removed in Section~\ref{sec:switches}: a game attaining $K = 118$ is so
-constrained --- each of the sixteen pawns must make six pawn moves,
-every one advancing a single rank, and promote, and at least $29$
-captures must occur --- that its critical
-moves cannot be scheduled with fewer than three colour changes
-(Theorem~\ref{thm:s3}). Four of the six candidate patterns are
-eliminated by counting alone; the two three-block patterns are
-eliminated by a lemma about
-pawns: \emph{while the enemy's pawns all stand on their home rank, an
-advancing pawn stops four moves short of promotion}
-(Lemma~\ref{lem:homerank}). Since $150 \cdot 117 = 17{,}550 < 17{,}697$,
-games with $K \le 117$ are shorter still, and the theorem follows.
+Sections~\ref{sec:setting}--\ref{sec:switches} establish the three estimates in
+\eqref{eq:outline}. Section~\ref{sec:maximum} establishes sharpness, completes
+the proof, and records the structure forced at equality.
 
-Nothing in the bound depends on how the game ends, which is why one argument
-covers checkmate, the 75-move rule, fivefold repetition, stalemate and
-\emph{dead positions} alike --- the last being the Laws' own term for a
-position from which no sequence of legal moves can checkmate either side;
-the game is drawn the moment one arises (Article~5.2.2
-\cite{fide2023laws}). That article has a literature of its own: it
-created the \emph{dead reckoning} genre of retrograde-analysis problems
-\cite{turnbull2001,buchanan2001}, has its own article in the codex of
-chess composition \cite{wfcccodex}, and deciding it algorithmically is a
-published problem in its own right \cite{ambrona2022}. The proof below
-uses it exactly once, for king against king (Lemma~\ref{lem:ct30}).
-
-\paragraph{Computer verification.}
-The proof is a hand argument and is meant to be checked by hand;
-independently of it, every finite case analysis in the text was
-exhausted by computer, the reference game was verified ply by ply
-(Appendix~\ref{app:witness}), and the central case analysis of
-Section~\ref{sec:switches} was cross-checked by two additional
-implementations (Appendix~\ref{app:crosschecks}). The companion
-repository \cite{repo} packages these checks, with a claims-to-code map
-(\texttt{CLAIMS.md}).
-Computation verifies the known construction and cross-checks the proof;
-it does not replace it.
-
-\section{Setting, critical moves, and the segment decomposition}
+\section{Rules, conventions, and the segment decomposition}
 \label{sec:setting}
 
-\subsection{The rules assumed}\label{sec:rules}
+\subsection{Rule set and chess conventions}
 
-A \emph{game} is a sequence of legal moves from the standard initial
-position, played until a rule of the FIDE Laws \cite{fide2023laws} ends it.
-We write $L$ for its length in \emph{plies} --- half-moves, single moves
-by one player --- and number plies from $1$; White plays the odd plies.
-The game-ending rules relevant here are:
+For the purposes of this paper, a \emph{game} is a sequence of legal moves from
+the standard initial position, continued until the first mandatory termination
+condition in the 2023 FIDE Laws applies. Write $L$ for its length in
+\emph{plies}, where one ply is one move by one player; White plays the
+odd-numbered plies. The mandatory conditions relevant to the statement are as
+follows.
+
 \begin{enumerate}
-  \item \emph{Checkmate} (Art.~5.1.1) and \emph{stalemate} (Art.~5.2.1) end
-    the game on the move that produces them.
-  \item \emph{Dead position} (Art.~5.2.2): the game is drawn the moment a
-    position arises from which no sequence of legal moves can lead to a
-    checkmate by either side.
-  \item \emph{Fivefold repetition} (Art.~9.6.1): the game is drawn, with no
-    claim required, when the same position (same pieces on the same squares,
-    same side to move, same castling and en passant possibilities, as
-    specified in Art.~9.2) has occurred five times.\footnote{The 2014 formulation
-    required the five occurrences to be consecutive; the requirement was
-    removed in the 2017 revision \cite{fide2017laws}. The difference is
-    immaterial here: the upper bound follows from the automatic
-    75-move rule alone, and the verified reference game never lets any
-    position occur even three times (Appendix~\ref{app:witness}).}
-  \item \emph{Seventy-five--move rule} (Art.~9.6.2): the game is drawn, with
-    no claim required, when at least $75$ consecutive moves by each player
-    --- that is, $150$ consecutive plies --- have been played without any
-    pawn move and without any capture. If the ply completing the $150$
-    delivers checkmate, the checkmate stands.
+  \item Checkmate (Article~5.1.1), stalemate (Article~5.2.1), and a dead
+    position (Article~5.2.2) terminate the game immediately. A dead position
+    is one from which neither player can checkmate by any possible sequence
+    of legal moves.
+  \item Fivefold repetition (Article~9.6.1), with repeated positions
+    interpreted as in Article~9.2, terminates the game.
+  \item The seventy-five-move rule (Article~9.6.2) terminates the game after
+    75 consecutive moves by each player, equivalently 150 consecutive plies,
+    without a pawn move or a capture. If the final ply delivers checkmate,
+    checkmate takes precedence.
 \end{enumerate}
-Draws by agreement, resignations, and the \emph{claimable} draws (threefold
-repetition, Art.~9.2; the 50-move rule, Art.~9.3) are voluntary: players
-maximising the length of a game simply never invoke them, so they play no
-role in the maximisation. This is the setting of \cite{murphy2020longest}.
 
-It is convenient to track the \emph{halfmove clock} $\clock(t)$: the number
-of plies played since the most recent pawn move or capture (or since the
-start of the game, if there has been none). Article~9.6.2 says precisely
-that the game ends when $\clock$ reaches $150$, the ply that brings it there
-being the last of the game, and being scored as mate if it mates.
+We disregard time forfeiture, resignation, draws by agreement, and claimable
+draws, since none can increase the number of plies. The upper-bound argument
+uses Article~9.6.2 throughout and Article~5.2.2 only in
+Lemma~\ref{lem:ct30}; the other mandatory termination rules can only shorten a
+game. Apart from these rules, the proof uses only alternation of play and the
+elementary pawn and capture facts recorded below.
+
+We use the standard coordinates of a chessboard: the files are
+$a,b,\ldots,h$ and the ranks are $1,2,\ldots,8$. White pawns begin on rank~2
+and move towards rank~8; Black pawns begin on rank~7 and move towards rank~1.
+We call ranks~2 and~7 their respective home ranks, and ranks~8 and~1 their
+promotion ranks. A pawn advances one rank, or two ranks on its first move from
+its home rank, and captures one square diagonally forward. While it remains a
+pawn, it changes file only by making such a capture. Promotion upon reaching
+the promotion rank is mandatory.
+
+Kings are never captured, so each side has fifteen capturable initial pieces:
+eight pawns and seven non-pawn pieces. Throughout the proof, \emph{piece}
+includes a pawn. We follow each of the $32$ initial pieces through the game,
+retaining its identity after promotion. Thus a promoted pawn remains one of
+the eight pieces that began as pawns, and promotion creates no additional
+capturable identity.
 
 \subsection{Critical moves and segments}
 
-\begin{definition}[Critical move]\label{def:critical}
-A \emph{critical move} is a pawn move or a capture. (En passant is both; a
-promotion is a pawn move; castling is neither.) A \emph{quiet} move is a
-move that is not critical.
+\begin{definition}[Critical and quiet moves]\label{def:critical}
+A \emph{critical move} is a pawn move or a capture. A \emph{quiet move} is a
+move that is neither. Thus an en passant capture is critical for both reasons,
+promotion is critical because it is a pawn move, and castling is quiet.
 \end{definition}
 
-Critical moves are exactly the moves that reset the halfmove clock, and they
-are irreversible: a pawn cannot retreat, and a captured piece never
-returns. We keep the term of \cite{murphy2020longest}, where the problem
-was posed: ``Let's call an irreversible move that resets the 75-move
-counter a \emph{critical move}.'' Labelle \cite{labelle2015longest}
-calls the same plies \emph{delay plies}; the usage is unrelated to the
-colloquial sense of a tactically critical move.
+Critical moves are precisely the moves that reset the counter in
+Article~9.6.2.
 
-\begin{definition}[Segments, endpoints, $K$, $T$]\label{def:segments}
-Let $t_1 < t_2 < \dots < t_m$ be the plies of a game's critical moves. Set
-$T = 1$ if quiet plies follow the last critical move (or if the game has
-moves but no critical move at all), and $T = 0$ otherwise. The game's
-\emph{endpoints} are
+\begin{definition}[Segments and endpoints]\label{def:segments}
+Let
 \[
-  e_i = t_i \ (1 \le i \le m), \qquad e_{m+1} = L \text{ if } T = 1,
+  t_1<t_2<\cdots<t_m
 \]
-together with the virtual endpoint $e_0 = 0$. The number of \emph{segments}
-is $K = m + T$; segment $i$ consists of plies $e_{i-1}+1, \dots, e_i$.
-Every ply lies in exactly one segment, and $e_K = L$.
+be the plies on which the critical moves of a game occur. Set $T=1$ if at
+least one quiet ply follows the last critical move, or if the game contains no
+critical move, and set $T=0$ otherwise. Define
+\[
+  e_0=0,\qquad e_i=t_i\quad(1\le i\le m),
+\]
+and, when $T=1$, define $e_{m+1}=L$. Put $K=m+T$. For
+$1\le i\le K$, the interval of plies
+\[
+  (e_{i-1},e_i]\cap\mathbb Z
+  =\{e_{i-1}+1,\ldots,e_i\}
+\]
+is \emph{segment $i$}. When $T=1$, the final segment is called the
+\emph{terminal quiet segment}.
 \end{definition}
 
-\begin{definition}[Switches $S$]\label{def:switches}
-The \emph{colour} of an endpoint $e_i$ ($i \ge 1$) is the colour of the
-player who played ply $e_i$ --- White if $e_i$ is odd, Black if even. By
-convention the virtual endpoint $e_0 = 0$ is \emph{Black} (it has the parity
-of a Black ply, and the game opens as if Black had just made a critical
-move). The switch count is
+For $i\ge1$, let $\operatorname{col}(e_i)$ be the colour of the player who
+moves on ply $e_i$: White when $e_i$ is odd and Black when it is even. We assign
+the virtual endpoint $e_0=0$ the colour Black. This convention treats the start of the
+game as having the parity of a preceding Black ply.
+
+\begin{definition}[Switch count]\label{def:switch}
+The \emph{switch count} is
 \[
-  S \;=\; \#\{\, i \in \{1,\dots,K\} : \text{colour}(e_i) \ne
-  \text{colour}(e_{i-1}) \,\}.
+  S=\#\bigl\{i\in\{1,\ldots,K\}:
+    \operatorname{col}(e_i)\ne\operatorname{col}(e_{i-1})\bigr\}.
 \]
 \end{definition}
+
+For example, the following endpoint parities give three segments and one
+switch:
+\[
+  0_{\B}\xrightarrow{150}150_{\B}
+  \xrightarrow{149}299_{\W}
+  \xrightarrow{150}449_{\W}.
+\]
+The total length is therefore $150\cdot3-1=449$.
 
 \begin{lemma}[Segment decomposition]\label{lem:decomposition}
 Every game satisfies
-\[
-  L \;=\; 150K - S - \sum_{i=1}^{K}\delta_i
-  \qquad\text{with every } \delta_i \ge 0,
-\]
-where $\delta_i$ is the shortfall of segment $i$ from its target length
-($150$ if endpoints $e_{i-1},e_i$ have the same colour, $149$ otherwise).
-In particular $L \le 150K - S$.
-\end{lemma}
-
-\begin{proof}
-Fix $i$ and consider the segment plies $e_{i-1}+1, \dots, e_i$. All of them
-except possibly the last are quiet ($t_{i}$ is the next critical ply after
-$t_{i-1}$; the terminal segment is entirely quiet). Suppose
-$e_i - e_{i-1} \ge 151$. Then the $150$ plies
-$e_{i-1}+1, \dots, e_{i-1}+150$ are all quiet, so after ply $e_{i-1}+150$
-the halfmove clock reads $150$ and the game has ended there by
-Article~9.6.2 (as a draw, or as the mate that takes precedence --- either
-way it has ended), contradicting the existence of ply
-$e_{i-1}+151 \le e_i \le L$. Hence $e_i - e_{i-1}\le 150$.
-
-Plies alternate colours, so $e_i - e_{i-1}$ is even exactly when $e_i$ and
-$e_{i-1}$ have the same colour; this is where the convention
-$\text{colour}(e_0) = $ Black is used, $0$ having the parity of a Black
-ply. A segment whose endpoints differ in colour therefore has odd length,
-and being $\le 150$, has length $\le 149$. Summing the segment lengths
-telescopes to $e_K - e_0 = L$ and yields the identity.
-\end{proof}
-
-\begin{remark}
-The terminal quiet segment genuinely can reach $150$ plies: if the game
-ends by the 75-move rule, the drawing ply is the $150$th quiet ply after
-the last critical move and it \emph{is played}. Its parity then forces the
-terminal endpoint to have the same colour as the previous one, consistent
-with the accounting above. A terminal segment ending earlier --- by a quiet
-checkmate, a stalemate, a fivefold repetition or a dead position --- is
-only shorter.
-\end{remark}
-
-Counting critical moves by inclusion--exclusion, with $P$ the number of pawn
-moves, $C$ the number of captures and $O$ the number of \emph{overlaps}
-(moves that are both, i.e.\ diagonal pawn captures, en passant included),
-\begin{equation}\label{eq:K}
-  K \;=\; (P - O) + (C + T).
+\begin{equation}\label{eq:decomposition}
+  L=150K-S-\sum_{i=1}^{K}\delta_i,
+  \qquad \delta_i\in\mathbb Z_{\ge0}.
 \end{equation}
-The next two sections bound the two halves of \eqref{eq:K} separately.
-Neither half refers to how the game ends.
-
-\section{At most 118 critical segments}\label{sec:k118}
-
-Throughout, we count over the $32$ \emph{pieces} that begin the game ---
-each one followed through the whole game, keeping its identity under
-promotion --- rather than over piece types; ``piece'' is used inclusively
-here, so pawns are pieces too. A piece that begins as a pawn is still that
-same piece after promoting.
-
-\begin{lemma}[Pawn basics]\label{lem:pawnbasics}
-Each pawn makes at most $6$ pawn moves, so $P \le 96$. A pawn that makes
-exactly $6$ pawn moves advances exactly one rank with each of them and
-promotes.
+Here $\delta_i$ is the shortfall of segment $i$ from length $150$ when its
+endpoints have the same colour, and from length $149$ when they have different
+colours. In particular,
+\[
+  L\le150K-S.
+\]
 \end{lemma}
 
 \begin{proof}
-Every pawn move advances the pawn at least one rank toward promotion, and
-there are six ranks between its home rank and the promotion rank. A pawn
-making six moves therefore advances exactly one rank per move and finishes
-on the promotion rank, where promotion is mandatory.
+Fix a segment with endpoints $e_{i-1}$ and $e_i$. Every ply in the segment
+except possibly its last is quiet; the terminal quiet segment is entirely
+quiet. If the segment had length at least $151$, then its first $150$ plies
+would be quiet, and Article~9.6.2 would terminate the game at ply
+$e_{i-1}+150$. Hence every segment has length at most $150$.
+
+Because plies alternate colours, $e_i-e_{i-1}$ is even exactly when the two
+endpoints have the same colour. A segment whose endpoints have different
+colours therefore has odd length and hence length at most $149$. Subtracting
+each segment length from the corresponding bound defines
+$\delta_i\in\mathbb Z_{\ge0}$. Summing over the segments gives
+\eqref{eq:decomposition}.
 \end{proof}
 
-\subsection{Origin pairs and the bound \texorpdfstring{$P - O \le 88$}{P - O <= 88}}
+Let $P$ be the number of pawn moves, $C$ the number of captures, and
+$C_{\mathrm p}$ the number of captures made by pawns. The number of critical
+moves is $P+C-C_{\mathrm p}$, and therefore
+\begin{equation}\label{eq:K}
+  K=(P-C_{\mathrm p})+(C+T).
+\end{equation}
 
-\begin{definition}[Origin pair, resolved file]\label{def:originpair}
-The two pawns that begin on file $i$ (one White, one Black) are that file's
-\emph{origin pair}. File $i$ is \emph{resolved} if at least one of those two
-pawns makes a diagonal pawn move at some point in the game; otherwise it is
-\emph{unresolved}. Write $f$ for the number of resolved files.
+\section{The 118-segment bound}\label{sec:k118}
+
+\begin{lemma}[Pawn moves]\label{lem:pawnbasics}
+Each pawn makes at most six pawn moves. Consequently $P\le96$. If a pawn
+makes six pawn moves, every one of them advances it by exactly one rank, and
+the sixth move promotes it.
+\end{lemma}
+
+\begin{proof}
+The promotion rank is six rank-steps from the home rank, and every pawn move
+advances the pawn by at least one rank towards promotion. Equality therefore
+requires six one-rank moves, the last of which promotes the pawn.
+\end{proof}
+
+\subsection{Pawn moves and pawn captures}
+
+\begin{definition}[Origin pairs]\label{def:originpair}
+For each file, the White pawn and Black pawn that begin on that file form its
+\emph{origin pair}. An origin pair is \emph{resolved} if at least one of its
+members makes a capture while still a pawn, and \emph{unresolved} otherwise.
+A capture made on the promotion move counts as a capture by a pawn; a
+capture made by the promoted piece on a later move does not. Let $f$ be
+the number of resolved origin pairs.
 \end{definition}
 
-A diagonal pawn move is the only way a pawn changes file, and it is always a
-capture; so both pawns of an unresolved pair spend their entire lives on
-file $i$.
-
-\begin{lemma}[Unresolved pair bound]\label{lem:cap10}
-The two pawns of an unresolved origin pair make at most $10$ pawn moves
-combined, and $10$ is attained in a legal game.
+\begin{lemma}[Unresolved origin pair]\label{lem:cap10}
+The two pawns in an unresolved origin pair make at most ten pawn moves in
+total.
 \end{lemma}
 
 \begin{proof}
-Both pawns stay on file $i$. While both are on the board, the White pawn is
-strictly below the Black one: neither can capture the other (a capture would
-be diagonal), and neither can pass the other, since a single push onto an
-occupied square is illegal and a double push may not jump over an occupied
-square. So if White's pawn has advanced $a$ ranks and Black's $b$ ranks,
-they stand on ranks $2+a < 7-b$, giving $a + b \le 4$; and since each pawn
-move advances at least one rank, the two pawns have made at most $4$
-combined moves while both are on the board. In particular neither pawn can
-promote while the other is on the board, so at most one of the pair ever
-promotes, and only after the other has been captured (necessarily by some
-other piece).
-
-When one pawn of the pair leaves the board its total contribution is frozen
-at some $d \le 4$, and the survivor's lifetime total is at most $6$ by
-Lemma~\ref{lem:pawnbasics}, for a combined total of at most
-$d + 6 \le 10$.
-
-Ten is attained: in
+While both pawns remain on the board as pawns, neither changes file, so they
+remain on their common origin file with the White pawn strictly below the
+Black pawn. If they have advanced $a$ and $b$ ranks, respectively, then
 \[
-  \text{1.\,Nf3 a6\; 2.\,Ng1 a5\; 3.\,Nf3 a4\; 4.\,Ng1 a3\; 5.\,Nxa3 Nc6\;
-  6.\,Nc4 Rb8\; 7.\,a3 Nf6\; 8.\,a4 Ng8\;}
+  2+a<7-b,
 \]
-\[
-  \text{9.\,a5 Nf6\; 10.\,a6 Ng8\; 11.\,a7 Nf6\; 12.\,a8=Q Ng8}
-\]
-Black's a-pawn walks $a7$--$a3$ in four moves and is captured there by the
-knight; White's a-pawn then walks the whole file and promotes, six more.
-Neither pawn ever moved diagonally, so the a-file is unresolved throughout.
-The sequence is a legal prefix rather than a completed game, but in any
-legal completion neither count changes --- the survivor has promoted and
-the other has been captured, so the pair makes no further pawn move and
-the file stays unresolved --- so a completed legal game attains ten as
-well. Figure~\ref{fig:cap10} shows the position after Black's fourth pawn
-move and the final position of the sequence.
+and hence $a+b\le4$. Thus the pair makes at most four pawn moves while both
+members remain on the board. In particular, neither pawn can promote before
+the other is captured.
+
+If neither pawn is ever captured, their combined total is at most four.
+Otherwise, the pawn captured first has made at most four moves, while the
+surviving pawn makes at most six moves over its entire lifetime by
+Lemma~\ref{lem:pawnbasics}. The combined total is therefore at most
+$4+6=10$.
 \end{proof}
 
-\begin{figure}[t]
-  \centering
-  \begin{minipage}[t]{0.48\textwidth}
-    \centering
-    \includegraphics[width=0.82\linewidth]{figures/cap10-after}
-    \par\smallskip (a)
-  \end{minipage}\hfill
-  \begin{minipage}[t]{0.48\textwidth}
-    \centering
-    \includegraphics[width=0.82\linewidth]{figures/cap10-final}
-    \par\smallskip (b)
-  \end{minipage}
-  \caption{The unresolved origin pair attaining ten combined pawn moves
-  (Lemma~\ref{lem:cap10}). (a)~After 4\ldots a3: Black's a-pawn has made
-  four moves and is captured on the next move by the b1-knight. (b)~The
-  final position: White's a-pawn has walked the file and promoted, six
-  further moves. Neither pawn ever left the a-file.}
-  \label{fig:cap10}
-\end{figure}
-
-\begin{remark}\label{rem:cap10caution}
-We record a caution for anyone reproducing this bound. The first
-observation of the proof --- ``two facing pawns cannot pass, so the pair
-makes at most $4$ combined pawn moves'' --- holds only \emph{while both
-pawns are on the board}; taken as an upper bound for the whole game it is
-false, since capturing one pawn frees the survivor to advance.
-\end{remark}
-
-\begin{lemma}[Overlap floor]\label{lem:overlapfloor}
-$O \ge f$.
+\begin{lemma}[Pawn-capture lower bound]\label{lem:pawncapturefloor}
+$C_{\mathrm p}\ge f$.
 \end{lemma}
 
 \begin{proof}
-For each resolved file $i$ choose one diagonal pawn move made by a pawn
-whose \emph{origin} file is $i$; one exists by definition, and it is a
-capture. A pawn has one origin file, so the chosen moves of distinct
-resolved files have distinct movers and are distinct moves, each of them
-an overlap.
+For each resolved origin pair, choose the first capture made by one of its
+pawns. This move contributes to $C_{\mathrm p}$. Different origin pairs give
+different moving pawns and hence different moves.
 \end{proof}
 
-\begin{proposition}\label{prop:pminuso}
-$P - O \le 88$, and equality forces $f = 8$, $P = 96$ and $O = 8$.
+\begin{proposition}[Net pawn-move bound]\label{prop:pminusc}
+For every game,
+\[
+  P-C_{\mathrm p}\le88.
+\]
+Equality implies
+\[
+  f=8,\qquad P=96,\qquad C_{\mathrm p}=8.
+\]
 \end{proposition}
 
 \begin{proof}
-The eight origin pairs partition the sixteen pawns, so summing
-Lemma~\ref{lem:cap10} over unresolved pairs and the trivial bound $12$ over
-resolved pairs, and combining with Lemma~\ref{lem:pawnbasics},
+For each unresolved origin pair, Lemma~\ref{lem:cap10} gives at most ten pawn
+moves. For each resolved origin pair, Lemma~\ref{lem:pawnbasics} gives at
+most twelve. Hence
 \[
-  P \;\le\; \min\bigl(96,\; 10(8-f) + 12f\bigr) \;=\; \min(96,\, 80 + 2f).
+  P\le\min\bigl\{96,10(8-f)+12f\bigr\}
+   =\min\{96,80+2f\}.
 \]
-With Lemma~\ref{lem:overlapfloor},
-$P - O \le \min(96, 80+2f) - f$. For $f \le 7$ this is at most
-$80 + 2f - f = 80 + f \le 87$; for $f = 8$ it is $96 - 8 = 88$. The maximum
-over $f$ is therefore $88$, attained only at $f = 8$ with $P = 96$ and
-$O = f = 8$.
+Together with $C_{\mathrm p}\ge f$, this gives
+\[
+  P-C_{\mathrm p}\le\min\{96,80+2f\}-f.
+\]
+For $f\le7$, the right-hand side is at most $80+f\le87$; for $f=8$, it is at
+most $96-8=88$. Equality therefore requires $f=8$, after which the bounds
+$P\le96$ and $C_{\mathrm p}\ge8$ force $P=96$ and
+$C_{\mathrm p}=8$.
 \end{proof}
 
-Maximising over $f$ is what makes Proposition~\ref{prop:pminuso} a statement
-about all games rather than about games with eight overlaps; asserting
-$O \ge 8$ outright would be circular, being true only \emph{because}
-$K = 118$ forces every file to be resolved.
+\subsection{Captures and the terminal quiet segment}
 
-\subsection{The bound \texorpdfstring{$C + T \le 30$}{C + T <= 30}}
-
-\begin{lemma}\label{lem:ct30}
-$C + T \le 30$.
+\begin{lemma}[Capture--terminal bound]\label{lem:ct30}
+$C+T\le30$.
 \end{lemma}
 
 \begin{proof}
-Only the $30$ non-king pieces can ever be captured, so $C \le 30$. If
-$C \le 29$ then, since $T \le 1$, we get $C + T \le 30$. If $C = 30$, the
-$30$th capture leaves the two kings alone on the board. King versus king is
-a dead position --- no sequence of legal moves mates --- so by
-Article~5.2.2 the game ends on that very ply; no quiet ply follows the last
-critical move and $T = 0$, giving $C + T = 30$.
+There are $30$ capturable initial pieces, so $C\le30$. If $C\le29$, then
+$C+T\le30$ because $T\le1$. If $C=30$, only the two kings remain after the
+last capture. A position containing only the two kings is dead, so
+Article~5.2.2 ends the game on that capture and no terminal quiet segment
+follows. Thus $T=0$, and again $C+T=30$.
 \end{proof}
 
-This is the only place any dead-position reasoning enters the upper bound,
-and king versus king is the one case where deadness is beyond dispute. The
-two ways of reaching $30$ are worth displaying, because they explain why
-draws do not outlast checkmates:
-\[
-  \underbrace{96 + 30 - 8 + 0}_{\text{all $30$ captured, no closing
-  segment}} \;=\; \underbrace{96 + 29 - 8 + 1}_{\text{$29$ captured, one
-  closing segment}} \;=\; 118 .
-\]
+\Needspace{14\baselineskip}
+\subsection{The segment bound and its equality case}
 
-\subsection{The bound \texorpdfstring{$K \le 118$}{K <= 118} and its equality case}
-
-\begin{theorem}\label{thm:k118}
-Every game has $K \le 118$. Moreover a game with $K = 118$ satisfies
-\[
-  f = 8, \qquad P = 96, \qquad O = 8, \qquad C + T = 30,
-\]
-so all sixteen pawns make six pawn moves each --- every one advancing
-the pawn by exactly one rank --- and promote, and $C \ge 29$.
+\begin{theorem}[Segment bound]\label{thm:k118}
+Every game satisfies $K\le118$. If $K=118$, then
+\begin{equation}\label{eq:equalityprofile}
+  f=8,\qquad P=96,\qquad C_{\mathrm p}=8,\qquad C+T=30.
+\end{equation}
+In particular, all sixteen pawns make six one-rank moves, promoting on the
+sixth, and $C\ge29$.
 \end{theorem}
 
 \begin{proof}
-By \eqref{eq:K}, Proposition~\ref{prop:pminuso} and Lemma~\ref{lem:ct30},
+By \eqref{eq:K}, Proposition~\ref{prop:pminusc}, and Lemma~\ref{lem:ct30},
 \[
-  K = (P - O) + (C + T) \le 88 + 30 = 118 .
+  K=(P-C_{\mathrm p})+(C+T)\le88+30=118.
 \]
-Equality forces $P - O = 88$ and $C + T = 30$; the former pins
-$(f, P, O) = (8, 96, 8)$ by the equality case of
-Proposition~\ref{prop:pminuso}, and $P = 96$ makes every pawn's count
-exactly $6$, whence Lemma~\ref{lem:pawnbasics} applies to each. Finally
-$T \le 1$ gives $C \ge 29$.
+Equality requires equality in both component bounds.
+Proposition~\ref{prop:pminusc} gives $f=8$, $P=96$, and
+$C_{\mathrm p}=8$, while Lemma~\ref{lem:ct30} gives $C+T=30$. Since
+$T\le1$, we have $C\ge29$. Finally, $P=96$ forces every pawn to attain the
+equality case of Lemma~\ref{lem:pawnbasics}.
 \end{proof}
 
-\begin{remark}[The ceiling of 17{,}699]\label{rem:ceiling}
-Theorem~\ref{thm:k118} already yields the ceiling stated in
-\cite{murphy2020longest}, now as a bound over all games. A game with $K \le 117$ has
-$L \le 150 \cdot 117 = 17{,}550$ by Lemma~\ref{lem:decomposition}. A game
-with $K = 118$ has $P = 96$, so both sides move pawns; a pawn move is a
-critical move made by the pawn's owner, so endpoints of both colours
-occur. Since the virtual endpoint $e_0$ is Black by convention and some
-endpoint is White, the endpoint colour sequence changes at least once:
-$S \ge 1$, and $L \le 150 \cdot 118 - 1 = 17{,}699$. The next section
-shows that at $K = 118$ the colour must in fact change three times, which
-removes the last two plies.
-\end{remark}
+\section{The three-switch bound}\label{sec:switches}
 
-\section{Games with 118 segments have at least four critical-move
-blocks}
-\label{sec:switches}
+Throughout this section, assume $K=118$. By Theorem~\ref{thm:k118}, every
+pawn makes six pawn moves and at least $29$ captures occur. Since $T\le1$, the
+game has at least $117$ critical moves; in particular, the critical-move
+colour sequence is nonempty.
 
-Throughout this section, fix a game with $K = 118$; by
-Theorem~\ref{thm:k118} it has $P = 96$ --- \emph{every pawn makes exactly
-six pawn moves} --- and $C \ge 29$. These two facts do all the work. We
-emphasise at the outset that $S \ge 3$ is claimed \emph{only} under
-$K = 118$; it is false in general (Remark~\ref{rem:notglobal}).
+\subsection{Block patterns}
 
-\subsection{Blocks and patterns}
-
-The critical moves of a game, in order, form a sequence of coloured events
-(the colour of a pawn move is the pawn's owner; the colour of a capture is
-the capturer, i.e.\ the side that does \emph{not} own the piece captured).
-The \emph{pattern} of any finite sequence of coloured events is obtained
-by grouping maximal runs of equal colour into \emph{blocks} and listing
-the block colours; the pattern of the critical-move sequence is the
-game's \emph{critical-move pattern}, and the pattern of the endpoint
-sequence is its \emph{endpoint pattern}. Here the endpoint sequence
-means $(e_1, \dots, e_K)$ of Definition~\ref{def:segments}: the virtual
-endpoint $e_0$ is \emph{not} part of the endpoint pattern; it is
-prepended only when computing the switch count $S$. Counting that
-virtual Black endpoint, a game whose endpoint pattern consists of $n$
-blocks has $S = n - 1$ if the pattern opens with Black and $S = n$ if it
-opens with White. And since the endpoint sequence is the critical-move
-sequence with, when $T = 1$, one element appended --- which either
-extends the last block or starts a new one --- the endpoint pattern has
-at least as many blocks as the critical-move pattern.
-
-A game with $K = 118$ has at least $117$ critical moves, so its
-critical-move pattern is nonempty. We refute every nonempty alternating
-pattern of at most three blocks --- there are exactly six:
+\begin{definition}[Block pattern]\label{def:pattern}
+For a nonempty finite sequence with entries in $\{\B,\W\}$, its \emph{block
+pattern} is obtained by replacing each maximal constant run by a single
+letter; these maximal runs are the \emph{blocks} of the sequence. The
+\emph{critical-move colour sequence} is
 \[
-  \mathsf{B}, \qquad \mathsf{W}, \qquad \mathsf{BW}, \qquad \mathsf{WB},
-  \qquad \mathsf{BWB}, \qquad \mathsf{WBW}.
+  \bigl(\operatorname{col}(t_1),\ldots,
+        \operatorname{col}(t_m)\bigr),
 \]
-Each side has $15$ capturable pieces, of which exactly $7$ (queen, two
-rooks, two bishops, two knights) did not begin as pawns; the count below is
-over pieces in the sense of Section~\ref{sec:k118}, so a piece that began
-as a pawn and is captured after promoting still counts against the pawn
-origins.
+and the \emph{endpoint colour sequence} is
+\[
+  \bigl(\operatorname{col}(e_1),\ldots,
+        \operatorname{col}(e_K)\bigr).
+\]
+Their block patterns are called the \emph{critical-move block pattern} and the
+\emph{endpoint block pattern}, respectively.
+\end{definition}
 
-\subsection{Four patterns are eliminated by counting}
+For example,
+\[
+  (\B,\B,\W,\W,\B)\longmapsto\B\W\B.
+\]
+The virtual endpoint $e_0$ is not part of the endpoint colour sequence; it is
+used only in the definition of $S$.
 
-\begin{proposition}[Single block]\label{prop:oneblock}
-Patterns $\mathsf{B}$ and $\mathsf{W}$ are impossible at $K = 118$.
+\begin{lemma}[Endpoint blocks]\label{lem:blockrelation}
+The endpoint colour sequence has at least as many blocks as the critical-move
+colour sequence. If the endpoint colour sequence has $r$ blocks, then
+\[
+  S=
+  \begin{cases}
+    r-1,&\text{if the first endpoint is Black},\\
+    r,&\text{if the first endpoint is White}.
+  \end{cases}
+\]
+Consequently, an endpoint colour sequence with at least four blocks has
+$S\ge3$.
+\end{lemma}
+
+\begin{proof}
+The endpoint colour sequence is the critical-move colour sequence, with one
+terminal endpoint appended when $T=1$. Appending an element cannot reduce the
+number of blocks. The formula for $S$ counts the $r-1$ changes between
+consecutive blocks and, when the first endpoint is White, the additional
+change from the virtual Black endpoint $e_0$.
+\end{proof}
+
+The possible critical-move block patterns with at most three blocks are
+\[
+  \B,\quad \W,\quad \B\W,\quad \W\B,\quad
+  \B\W\B,\quad \W\B\W.
+\]
+We exclude them in turn.
+
+\subsection{One and two blocks}
+
+\begin{proposition}\label{prop:oneblock}
+The block patterns $\B$ and $\W$ are impossible when $K=118$.
 \end{proposition}
 
 \begin{proof}
-A pawn move is a critical move of the pawn's own colour. In a single-block
-game only one colour makes critical moves, so only its eight pawns ever
-move: $P \le 48 < 96$.
+A pawn move is a critical move of the pawn's side. With only one block, only
+one side's eight pawns can move, so $P\le8\cdot6=48$, contrary to $P=96$.
 \end{proof}
 
-\begin{proposition}[Two blocks]\label{prop:twoblocks}
-Patterns $\mathsf{BW}$ and $\mathsf{WB}$ are impossible at $K = 118$.
+\begin{proposition}\label{prop:twoblocks}
+The block patterns $\B\W$ and $\W\B$ are impossible when $K=118$.
 \end{proposition}
 
 \begin{proof}
-Write the pattern $(X, Y)$: every critical move of $X$ precedes every
-critical move of $Y$. Write $C_X$ and $C_Y$ for the numbers of captures
-made by $X$ and by $Y$, so that $C_X + C_Y = C$. Since $Y$ captures only
-$X$'s pieces,
-$C_Y \le 15$, so $C_X \ge C - 15 \ge 29 - 15 = 14$: the colour moving
-first makes at least $14$ captures, all of them before $Y$ has made a
-single critical move. Each piece so captured is a $Y$ piece that, being
-off the board before every $Y$ critical move, never made a pawn move. At
-most $7$ of the captured pieces did not begin as pawns, so at least $7$
-of $Y$'s pieces that began as pawns make no pawn move at all, and
+Write the pattern as $(X,Y)$, so every critical move by $X$ precedes every
+critical move by $Y$. Let $C_X$ and $C_Y$ be the respective numbers of
+captures. Since $Y$ can capture at most the fifteen capturable pieces of $X$,
+we have $C_Y\le15$, and therefore
 \[
-  P \;\le\; 96 - 7 \cdot 6 \;=\; 54 \;<\; 96. \qedhere
+  C_X=C-C_Y\ge29-15=14.
 \]
+All these captures occur before the first critical move by $Y$. Among the
+captured $Y$-pieces, at most seven did not begin as pawns, so at least seven
+$Y$-pawns are captured before making any pawn move. They cannot move after
+they are captured. Hence
+\[
+  P\le96-7\cdot6=54,
+\]
+contrary to $P=96$.
 \end{proof}
 
-Note that $Y$ may well have made \emph{quiet} moves in the meantime; the
-argument only needs its critical moves to come later.
-
-\subsection{The home-rank lemma}
-
-The three-block patterns are not eliminated by counting alone; the
-following lemma closes both.
+\subsection{A home-rank obstruction}
 
 \begin{lemma}[Home-rank lemma]\label{lem:homerank}
-Fix colours $A$ (attacker) and $D$ (defender), and consider any position
-reachable from the initial position by a sequence of moves satisfying
-\begin{itemize}
-  \item[\textup{(R1)}] every move by $D$ is quiet, and
-  \item[\textup{(R2)}] no move by $A$ captures a $D$ pawn.
-\end{itemize}
-Then every square of $D$'s pawn home rank still holds the $D$ pawn that
-started there; no $A$ pawn ever stands on that rank; and no $A$ pawn has
-made more than four pawn moves.
+Let $X$ and $Y$ be the two opposing sides. Consider a prefix of a legal game
+from the standard initial position. Suppose that
+\begin{enumerate}
+  \item every move made by $Y$ in this prefix is quiet;
+  \item no move made by $X$ in this prefix captures a $Y$-pawn.
+\end{enumerate}
+Then all eight $Y$-pawns remain on their home squares, no $X$-pawn reaches
+$Y$'s pawn home rank, and every $X$-pawn makes at most four pawn moves during
+the prefix.
 \end{lemma}
 
 \begin{proof}
-We use only the following elementary facts about legal chess moves,
-labelled for reference: \textup{[H0]} the initial position has eight pawns on each home
-rank; \textup{[H1]} a legal move starts on a square holding a piece of the
-side to move; \textup{[H2]} a move onto an occupied square is a capture of
-an enemy piece standing there; \textup{[H3]} castling changes only
-back-rank squares; \textup{[H4]} an en passant capture removes a pawn from
-rank $4$ or rank $5$; \textup{[H5]} a move changes the occupancy of no
-squares other than its origin and destination, the castling rook's two
-squares, and the square of the pawn captured en passant; \textup{[H6]} a pawn move
-advances the pawn exactly one rank, or exactly two from its own home rank
-only.
+A move by a $Y$-pawn would be critical, so the first condition implies that
+no $Y$-pawn has moved. The second condition implies that none has been
+captured. Thus every $Y$-pawn remains on its initial square.
 
-\emph{Part 1: $D$'s home rank never changes.} Induction on moves, the base
-case being [H0]. Let the invariant hold and let $m$ be a move permitted by
-(R1), (R2). By [H5] it suffices to rule out each way $m$ could touch a
-home-rank square. $m$ cannot \emph{start} there: the square holds a $D$
-pawn, only $D$ may move it [H1], and that would be a pawn move, excluded by
-(R1). $m$ cannot \emph{end} there: the square is occupied, so the move
-would capture an enemy piece standing there [H2]; $D$ capturing is excluded
-by (R1), and the occupant is a $D$ pawn, so $A$ capturing it is excluded by
-(R2). Castling touches only back ranks [H3]. En passant removes a pawn from
-rank $4$ or $5$ [H4], not from a home rank (and the pawn captured would in
-any case have just made a double push --- for a $D$ pawn a pawn move,
-excluded by (R1)).
-
-\emph{Part 2: no $A$ pawn reaches $D$'s home rank.} Standing there requires
-a move ending there, ruled out above.
-
-\emph{Part 3: at most four moves.} By [H6] a pawn never moves backwards and
-double-pushes only from its own home rank. By Part 2 an $A$ pawn never
-occupies $D$'s home rank; nor the rank beyond it, which could only be
-reached by a single step from $D$'s home rank or a double push from a rank
-that is not the pawn's home rank. Its range is therefore the four ranks
-between its own home rank and $D$'s, and each pawn move spends at least one
-of them: at most four moves. (Four is attained, by four single pushes.)
+An $X$-pawn cannot move onto $Y$'s pawn home rank. A forward move to an
+occupied square is illegal, while a diagonal move to such a square would
+capture the $Y$-pawn, contrary to the second condition. Between an $X$-pawn's
+home rank and $Y$'s pawn home rank there are four ranks on which it may stand.
+Every pawn move advances it by at least one rank, so it makes at most four
+pawn moves during the prefix.
 \end{proof}
 
-Figure~\ref{fig:homerank} shows a minimal instance of the confinement.
+\Needspace{12\baselineskip}
+\subsection{Three blocks}
 
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=0.42\textwidth]{figures/homerank}
-  \caption{The home-rank lemma (Lemma~\ref{lem:homerank}), minimal
-  instance. After 1.\,Nf3 e6\; 2.\,Ng1 e5\; 3.\,Nf3 e4\; 4.\,Ng1 e3,
-  Black's pawn has made four moves and is confined: the square e2 holds a
-  pawn that only White may move, which would violate (R1), and the
-  captures on d2 and f2 are exactly what (R2) forbids.}
-  \label{fig:homerank}
-\end{figure}
+The remaining case is ruled out by the home-rank obstruction.
 
-\begin{proposition}[Three blocks]\label{prop:threeblocks}
-Neither $\mathsf{BWB}$ nor $\mathsf{WBW}$ is possible as the
-critical-move pattern of a game with $K = 118$.
+\begin{proposition}\label{prop:threeblocks}
+The block patterns $\B\W\B$ and $\W\B\W$ are impossible when $K=118$.
 \end{proposition}
 
 \begin{proof}
-Write either pattern as $(X, Y, X)$, where $X$ and $Y$ are the two
-colours, and write $C_X$, $C_Y$ for the numbers of captures made by $X$
-and by $Y$; thus every critical move of $Y$ lies in the middle block.
-Let $\tau$ be the ply of $Y$'s first critical move, and call the plies
-before $\tau$ the \emph{first phase}.
-
-Since $X$ can capture only the $15$ capturable pieces of $Y$, we have
-$C_X \le 15$, so
+Write the pattern as $(X,Y,X)$, and let $C_X,C_Y$ be the numbers of captures
+made by the two sides. Since $X$ can capture at most fifteen $Y$-pieces,
 \[
-  C_Y \;=\; C - C_X \;\ge\; 29 - 15 \;=\; 14 .
+  C_Y=C-C_X\ge29-15=14.
 \]
-All these captures are critical moves of $Y$ and therefore occur in the
-middle block. At most seven of the pieces captured by $Y$ did not begin
-as pawns, so at least seven of them are $X$-pieces that began as pawns.
+At most seven of the pieces captured by $Y$ did not begin as pawns. Hence at
+least seven of the captured $X$-pieces began as pawns.
 
-Fix one such piece $p$. By Theorem~\ref{thm:k118} it makes exactly six
-pawn moves, all before its capture. Every pawn move of $p$ is a critical
-move of $X$, and a critical move of $X$ at a ply $> \tau$ belongs to the
-final $X$-block, hence comes after \emph{every} critical move of $Y$ ---
-in particular after the move on which $p$ is captured, which is
-impossible for a piece no longer on the board. So all six of its pawn
-moves occur in the first phase.
+Let $\tau$ be the first critical move by $Y$, and fix one such piece $p$,
+which began as an $X$-pawn. By Theorem~\ref{thm:k118}, $p$ makes six pawn
+moves before it is captured. Any critical move by $X$ after $\tau$ belongs to
+the final $X$-block and therefore occurs after every critical move in the
+middle $Y$-block, including the capture of $p$. Consequently all six pawn
+moves of $p$ occur before $\tau$.
 
-Now apply Lemma~\ref{lem:homerank} to the first phase with $A = X$ and
-$D = Y$. (R1) holds by the definition of $\tau$: every move by $Y$
-before $\tau$ is quiet. For (R2), suppose a move by $X$ in the first
-phase captured a $Y$ pawn. That pawn would be off the board before
-$Y$'s first critical move; since each of its pawn moves would itself be
-a critical move of $Y$, it would make no pawn move at all,
-contradicting $P = 96$. So (R2) holds as well. The lemma bounds every
-$X$ pawn by four pawn moves in the first phase --- but each of the
-seven pieces fixed above needs six there. Counting only the shortfall
-of two for each,
-\[
-  P \;\le\; 96 - 7 \cdot (6 - 4) \;=\; 82 \;<\; 96. \qedhere
-\]
+Consider the game prefix ending immediately before $\tau$. Every move made by
+$Y$ in this prefix is quiet. Moreover, $X$ cannot have captured a $Y$-pawn:
+such a pawn would have been removed before making any critical move and could
+not make the six pawn moves required by $P=96$. Lemma~\ref{lem:homerank}
+therefore applies to this prefix and implies that $p$ makes at most four pawn
+moves before $\tau$, contradicting the six moves just established.
 \end{proof}
 
-The only escape the home-rank lemma allows --- capturing a way through the
-home rank --- costs the captured pawn all six of its moves, which
-Theorem~\ref{thm:k118} cannot spare. That is the entire content of clause
-(R2) above.
-
-\begin{theorem}[Four blocks]\label{thm:s3}
-Every game with $K = 118$ has a critical-move pattern of at least four
-blocks; hence its endpoint pattern also has at least four blocks, and
-$S \ge 3$.
+\begin{theorem}[Three-switch bound]\label{thm:s3}
+If $K=118$, then the critical-move colour sequence has at least four blocks
+and $S\ge3$.
 \end{theorem}
 
 \begin{proof}
-The critical-move pattern is a nonempty alternating pattern, and the
-six such patterns of at most three blocks are refuted by
-Propositions~\ref{prop:oneblock}, \ref{prop:twoblocks}
-and~\ref{prop:threeblocks}; so it has at least four blocks, and by the
-appending observation of Section~\ref{sec:switches} so does the
-endpoint pattern. A game whose endpoint pattern has $n \ge 4$ blocks
-has $S \ge n - 1 \ge 3$.
+Propositions~\ref{prop:oneblock},~\ref{prop:twoblocks}, and~\ref{prop:threeblocks}
+exclude all nonempty block patterns with at most three
+blocks. Hence the critical-move colour sequence has at least four blocks.
+Lemma~\ref{lem:blockrelation} transfers this lower bound to the endpoint
+colour sequence and gives $S\ge3$.
 \end{proof}
 
-\begin{remark}\label{rem:notglobal}
-$S \ge 3$ is conditional on $K = 118$, and only on it: every step above
-runs on $P = 96$ and $C \ge 29$. It is plainly false in general. The
-16-ply game \textup{1.\,Nf3 Nf6 2.\,Ng1 Ng8} repeated four times is legal
-and ends in fivefold repetition of the initial position; it has no pawn
-move and no capture, so $K = 1$ (the single closing segment), and its one
-endpoint is a Black ply, matching the virtual Black opening: $S = 0$. This
-costs nothing in Section~\ref{sec:main}: a game with $K \le 117$ forfeits
-at least $150$ plies, more than any switch count could recover.
-\end{remark}
+\section{Completion of the proof and the equality case}
+\label{sec:maximum}
 
-\section{The maximum length}\label{sec:main}
-
-\begin{theorem}[Upper bound]\label{thm:main}
-No legal chess game lasts more than $17{,}697$ plies.
-\end{theorem}
+\Needspace{11\baselineskip}
+\begin{proposition}[Sharpness]\label{prop:sharpness}
+There exists a legal move sequence of $17{,}697$ plies from the standard
+initial position such that no mandatory termination condition applies before
+the final ply, and the final ply delivers checkmate.
+\end{proposition}
 
 \begin{proof}
-Let a game have $K$ segments. If $K \le 117$ then by
-Lemma~\ref{lem:decomposition} with the trivial $S \ge 0$,
-\[
-  L \;\le\; 150 \cdot 117 \;=\; 17{,}550 \;<\; 17{,}697 .
-\]
-If $K = 118$ --- the largest value Theorem~\ref{thm:k118} permits --- then
-Theorem~\ref{thm:s3} gives $S \ge 3$, so
-\[
-  L \;\le\; 150 \cdot 118 - 3 \;=\; 17{,}697 . \qedhere
-\]
+Labelle~\cite{labelle2015longest} and Murphy~\cite{murphy2020longest} gave
+explicit legal games of this length. For reproducibility, the companion
+archive~\cite{repo} contains Murphy's move sequence and two separately
+implemented replay verifiers. The verifiers check move legality, fivefold
+repetition, and the seventy-five-move rule after every ply, and confirm
+checkmate on the final ply. Neither implements a complete decision procedure
+for dead positions under Article~5.2.2, but no such procedure is needed for
+this witness. From every earlier position, the remaining verified suffix is a
+legal sequence ending in checkmate, so that position is not dead; the existence
+of the next legal ply also rules out earlier checkmate and stalemate. Hence no
+mandatory termination condition applies before the final ply, and the lower
+bound follows.
 \end{proof}
 
-The two cases must be kept separate, because $S \ge 3$ is not available at
-$K \le 117$ (Remark~\ref{rem:notglobal}); it is also not needed there,
-since one whole segment outweighs any possible switch count.
-
-The equality analysis costs nothing further, and it determines a
-maximum-length game rather precisely:
-
-\begin{corollary}[Structure of maximum-length games]\label{cor:structure}
-A game of length $17{,}697$ satisfies
+\begin{proof}[Proof of Theorem~\ref{thm:main}]
+Let $K$ be the number of segments. By Theorem~\ref{thm:k118}, $K\le118$. If
+$K\le117$, then Lemma~\ref{lem:decomposition} gives
 \[
-  K = 118, \qquad S = 3, \qquad \delta_i = 0 \text{ for every } i,
+  L\le150\cdot117=17{,}550.
 \]
-and therefore, by the equality case of Theorem~\ref{thm:k118},
+If $K=118$, then Theorem~\ref{thm:s3} gives $S\ge3$, and therefore
 \[
-  f = 8, \qquad P = 96, \qquad O = 8, \qquad C + T = 30 .
+  L\le150\cdot118-3=17{,}697.
 \]
-In words: all sixteen pawns make six pawn moves each --- every one
-advancing the pawn by exactly one rank --- and promote, at least $29$
-captures occur, every one of the $118$ segments
-attains its target length ($150$ plies, or $149$ across a colour change),
-and both the critical-move pattern and the endpoint pattern are
-$\mathsf{BWBW}$: Black makes the first critical move, and the final
-endpoint is White's.
+This proves the universal upper bound. Proposition~\ref{prop:sharpness} shows
+that it is attained.
+\end{proof}
+
+\begin{corollary}[Structure of maximum-length games]\label{cor:equality}
+Every game of length $17{,}697$ has
+\[
+  K=118,\qquad S=3,\qquad \delta_i=0\quad(1\le i\le118),
+\]
+and
+\[
+  f=8,\qquad P=96,\qquad C_{\mathrm p}=8,\qquad C+T=30.
+\]
+Thus all sixteen pawns make six one-rank moves, promoting on the sixth; at
+least $29$ captures occur; and every segment has the maximum length permitted
+by its endpoint parity.
+The critical-move and endpoint block patterns are both $\B\W\B\W$.
 \end{corollary}
 
 \begin{proof}
-By Theorem~\ref{thm:k118}, $K \le 118$; if $K \le 117$ the game has at
-most $17{,}550$ plies, so $K = 118$, and Theorem~\ref{thm:s3} gives
-$S \ge 3$. The decomposition of Lemma~\ref{lem:decomposition} then reads
+A game with $K\le117$ has length at most $17{,}550$, so a maximum-length game
+has $K=118$. Combining Theorem~\ref{thm:s3} with
+\eqref{eq:decomposition} gives
 \[
-  17{,}697 \;=\; 150 \cdot 118 - S - \sum_{i=1}^{118} \delta_i
-  \;\le\; 150 \cdot 118 - 3 \;=\; 17{,}697,
+  17{,}697
+  =150\cdot118-S-\sum_{i=1}^{118}\delta_i
+  \le150\cdot118-3.
 \]
-with equality throughout: $S = 3$ and every $\delta_i = 0$. The equality
-case of Theorem~\ref{thm:k118} supplies $f$, $P$, $O$ and $C + T$, and
-Lemma~\ref{lem:pawnbasics} the behaviour of each pawn.
+Equality holds throughout. Hence $S=3$ and every $\delta_i=0$. The equality
+statement in Theorem~\ref{thm:k118} gives the remaining numerical assertions
+and the behaviour of the pawns.
 
-For the patterns, Theorem~\ref{thm:s3} gives at least four blocks in
-the critical-move pattern. Since $S = 3$, there can be no more than
-four: each change between consecutive critical-move blocks is an
-adjacent unequal pair of the endpoint sequence, already counted by $S$.
-Thus the critical-move pattern has exactly four blocks. It cannot open
-with White: the initial comparison with the virtual Black endpoint
-$e_0$ would then add one switch to the three changes between the four
-blocks, giving $S \ge 4$. Hence the critical-move pattern is
-$\mathsf{BWBW}$. Finally, a terminal endpoint, if present, cannot start
-a new block, since that would add a fourth switch; therefore the
-endpoint pattern is also $\mathsf{BWBW}$.
+The critical-move colour sequence has at least four blocks by
+Theorem~\ref{thm:s3}. Each transition between consecutive blocks contributes
+a switch between critical endpoints, so $S=3$ permits at most four blocks.
+Thus there are exactly four. If the first block were White, the comparison
+with the virtual Black endpoint would contribute a fourth switch. Hence the
+critical-move block pattern is $\B\W\B\W$. Appending a terminal endpoint
+cannot create a new block without increasing $S$, so the endpoint block
+pattern is the same.
 \end{proof}
 
-\begin{corollary}[Exact maximum]\label{cor:exact}
-The maximum length of a chess game under the FIDE Laws is exactly
-$17{,}697$ plies --- $8{,}848$ full moves and one final White ply.
-\end{corollary}
+\section*{Data and code availability}
 
-\begin{proof}
-The bound of Theorem~\ref{thm:main} is attained: Murphy's explicit game
-\cite{murphy2020longest} is $17{,}697$ plies long and ends in checkmate
-on White's $8{,}849$th move, as independently re-verified, ply by ply,
-in Appendix~\ref{app:witness}, where the game is also matched against
-Corollary~\ref{cor:structure}.
-\end{proof}
+The companion archive~\cite{repo} contains Murphy's $17{,}697$-ply move
+sequence together with two separately implemented replay verifiers. The
+verifiers check move legality, fivefold repetition, and the seventy-five-move
+rule after every ply, and confirm checkmate on the final ply. The proof of
+Proposition~\ref{prop:sharpness} explains why the verified suffix ending in
+checkmate also rules out dead positions for this witness. The archive also
+contains ancillary computational cross-checks. None of these computations
+enters the upper-bound proof.
 
-\begin{remark}\label{rem:witnessprofile}
-The reference game realises Corollary~\ref{cor:structure} with $C = 29$
-and $T = 1$: its final ply is a quiet
-checkmate delivered with the halfmove clock at exactly $150$, the
-checkmate taking precedence under Article~9.6.2. Improving on such a game is
-impossible rather than merely hard: it fills every segment, and its three
-lost plies are exactly the three switches Theorem~\ref{thm:s3} proves
-unavoidable.
-\end{remark}
+The pinned software snapshot supporting the witness verification and ancillary
+checks is version~1.1.0 at Git commit
+\nolinkurl{2000be4d71d3e5ea72e565792c559a03e3dbc5fe}. The cited Zenodo DOI is
+the all-versions record; the commit hash fixes the exact software revision. The
+witness
+is \nolinkurl{data/longest.pgn}, whose SHA-256 digest is
+\nolinkurl{6700b7b70260c9b4448d58c610601cab938dd0e01392bd876d3379630de680bb}.
+From a clean checkout, \texttt{make witness} replays the witness and checks the
+expected length $17{,}697$ and termination by checkmate. The command
+\texttt{make verify} additionally runs the counting checks, test suite,
+independent move-generator check, and model cross-checks. The move-generator
+and CP-SAT cross-checks degrade to skips when their optional C compiler or
+OR-Tools dependency is unavailable. The development version and detailed
+verification notes are maintained in the
+\href{https://github.com/junyeobe0315/long_chess}{project repository on
+GitHub}.
 
 \section*{Acknowledgements}
 
-This work exists because Tom Murphy VII built a $17{,}697$-ply game and
-asked, in the title of \cite{murphy2020longest}, whether it is the
-longest; the answer is yes. The numerical structure behind the answer
---- $118$ clock-resetting opportunities, and constructions incurring
-three half-move losses --- was
-identified years earlier by Fran\c{c}ois Labelle
-\cite{labelle2015longest} and by the contributors of the forum threads
-his page credits --- Deedlit, Tatzelwurm and Falkenbach among them
-\cite{forum2011,forum2015}.
+Tom Murphy VII's construction and question motivated this work. The author
+thanks Fran\c{c}ois Labelle for documenting the earlier constructions and
+Alexis Langlois-R\'emillard for comments on an earlier draft.
 
-We thank Alexis Langlois-R\'emillard for helpful comments on an earlier
-draft, in particular on its chess and mathematical vocabulary.
-
-This work was carried out independently, outside any research group and
-without funding.
-
-The board diagrams were rendered with python-chess \cite{pythonchess};
-the piece images are by Colin~M.\,L.~Burnett \cite{burnett-pieces},
-triple-licensed under the GFDL, BSD and GPL, and are used here under the
-BSD option with this attribution.
-
-\appendix
-
-\section{The reference game}\label{app:witness}
-
-Among the published maximum-length games we verify the one constructed
-by hand
-in \cite{murphy2020longest} --- the \emph{reference game}; Labelle's page
-\cite{labelle2015longest} supplies another, machine-generated. (The
-repository's documentation and \texttt{make} targets call the reference
-game the \emph{witness}.) The companion repository \cite{repo} contains
-an independent verifier for it, built on the move generation of the
-\texttt{python-chess} library \cite{pythonchess} and this project's own
-implementation of the termination rules of Section~\ref{sec:rules}: it
-replays the game from the initial position, rejects any move that is
-illegal or played after the game has ended, classifies the position
-after every ply, and emits a per-ply trace (clock value, position
-multiplicity, termination state); a sequence passes only if the game
-ends exactly on its last move. The verified facts:
-
-\begin{itemize}
-  \item The game is legal, $17{,}697$ plies long, and ends in checkmate,
-    in the final position
-    \texttt{3k4/3Q4/4K3/8/8/8/8/8} --- king and queen against king,
-    Figure~\ref{fig:witnessfinal}.
-  \item No automatic termination fires early. The halfmove clock stays
-    below $150$ after every ply but the last; no position ever occurs even
-    three times (the maximum multiplicity of any position over the whole
-    game, under the identity of Article~9.2, is \emph{two}), so
-    fivefold repetition is never approached; no stalemate occurs.
-  \item No position of the game is a dead position, by an argument that needs no
-    material test: from every position, the remaining moves of the game
-    are themselves a legal series ending in checkmate, and a position from
-    which checkmate is reachable is precisely what Article~5.2.2 does not
-    end. The verifier checks the legality of those suffixes.
-  \item The final ply is a quiet checkmate played with the halfmove clock
-    at exactly $150$: the game ends on the precedence clause of
-    Article~9.6.2. Its length is insensitive to that clause --- under
-    either reading the $17{,}697$th ply is played and the game ends on it;
-    the clause decides only whether the result is a win or a draw.
-  \item The profile is the one Corollary~\ref{cor:structure} forces:
-    $117$ critical moves plus a closing segment ($K = 118$), with
-    $P = 96$ (each of the sixteen pawns makes exactly six pawn moves),
-    $C = 29$, $O = 8$ (every file resolved), $T = 1$. The endpoint
-    pattern is $\mathsf{BWBW}$, so $S = 3$, and the decomposition
-    of Lemma~\ref{lem:decomposition} closes exactly:
-    $115$ segments of $150$ plies, $3$ segments of $149$ (one per switch),
-    and $\sum_i \delta_i = 0$:
-    \[
-      17{,}697 \;=\; 150 \cdot 118 - 3 - 0 .
-    \]
-\end{itemize}
-
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=0.42\textwidth]{figures/witness-final}
-  \caption{The final position of the reference game, after ply
-  $17{,}697$: checkmate, delivered with the halfmove clock at exactly
-  $150$.}
-  \label{fig:witnessfinal}
-\end{figure}
-
-Two points of this verifier are rules of chess rather than engineering
-choices, and the reference game exercises both. First, the order of the
-termination tests: checkmate is tested before the $150$th-quiet-ply
-test, because the final ply above is simultaneously both, and the
-precedence clause of Article~9.6.2 says the mate stands --- a verifier
-that consults the clock first accepts the same $17{,}697$ plies but
-scores the game a draw. (The verifier's material-draw screen is not a
-decision procedure for Article~5.2.2 --- for such a procedure see
-\cite{ambrona2022}; it is never load-bearing here, by the suffix
-argument above.) Second, position identity for repetition: following
-Article~9.2, two positions count as the same exactly when their piece
-placement, the side to move, the \emph{retained} castling rights ---
-whether each side still has the right to castle with each original
-rook, regardless of whether castling is legal in the current position
---- and the availability of a \emph{legal}
-en passant capture all agree. Naive position keys fail in both
-directions. Comparing whole FEN strings separates positions the Laws
-identify: the halfmove clock and the move number play no part in
-identity, and the en passant target is recorded after every double push
-whether or not a capture is actually legal --- so the fivefold rule
-would never fire. Comparing only piece placement and the side to move
-merges positions the Laws distinguish, since retained castling rights
-and a legal en passant capture also matter. The verifier keys its
-repetition table on exactly the four data above; under that identity,
-no position of the reference game ever occurs three times. The verifier
-is deliberately independent: it
-imports nothing else from the repository, so the judge shares no code
-with any producer of games.
-
-Nor does the verification rest on a single implementation of the rules.
-A second verifier --- one file of C99 in the companion repository,
-using a 0x88 mailbox board where \texttt{python-chess} uses bitboards,
-parsing the PGN and resolving its SAN for itself, written against the
-Laws without reading \texttt{python-chess} --- replays the same game to
-the same verdict: $17{,}697$ plies, checkmate, $118$ critical segments,
-a per-ply trace byte-identical to the Python verifier's across all
-$17{,}698$ rows, and the identical set of legal moves at every position
-of the game ($730{,}845$ moves in all). Its own move generation is
-checked against perft node counts published outside this project and
-against hand-written rule cases pinned to the articles of the Laws.
-
-\section{Computational cross-checks}\label{app:crosschecks}
-
-Every finite case analysis in the text, each also proved by hand, was
-exhausted by computer: the unresolved-pair bound of
-Lemma~\ref{lem:cap10}, over a state space strictly more permissive than
-chess (turn order ignored, no third piece blocking the file, either pawn
-removable at any moment without cost); the impossibility of two facing
-pawns passing each other on a file; the uniqueness of the equality
-assignment of Theorem~\ref{thm:k118} (the same enumeration at $K = 117$
-admits many assignments, which is what makes the pinning at $118$
-informative); the terminal-endpoint step of Theorem~\ref{thm:s3} and
-Corollary~\ref{cor:structure} --- appending the terminal endpoint
-cannot lower the block count, and starting a new block adds a switch
---- over every alternating pattern of up to twelve blocks; and, for
-Lemma~\ref{lem:homerank}, the finite obligations [H0], [H3] and [H4].
-The universally quantified obligations [H1], [H2], [H5], [H6] admit no
-enumeration: they are read off the Laws \cite{fide2023laws}, and the
-repository checks that both move generators respect them, each over a
-large randomised corpus of positions --- a check on the tooling, not
-on the mathematics.
-
-To reduce the risk of an undetected error in the hand argument of
-Section~\ref{sec:switches}, the question ``does any endpoint pattern of
-at most three blocks admit $K = 118$?'' is cross-checked by two
-additional computational methods: a CP-SAT constraint model \cite{ortools}, and a solver-free
-arithmetic checker that declares its own constants, imposes aggregated
-forms of the same conditions --- each likewise a necessary condition of
-legality --- and decides the same question by direct enumeration.
-
-Fix an alternating endpoint pattern $\sigma$, an ending
-$e \in \{\text{checkmate}, \text{draw}\}$, and a target $k$. The model
-$M(\sigma, e, k)$ is a finite system of constraints over bounded integer
-variables: per-pawn pawn-move counts in each block of the pawn's colour,
-with a per-pawn total of at most six; per-piece capture indicators, each
-captured piece assigned the enemy-colour block in which it is captured, a
-captured piece that began as a pawn making no pawn move in any later
-block; capture, overlap
-and closing-segment totals with the coupling of Proposition~\ref{prop:pminuso} imposed through
-a free resolved-file count; the bound of Lemma~\ref{lem:homerank} on
-opening-block pawn moves, imposed only while no enemy pawn has been
-captured in that block; for $e = \text{checkmate}$, the requirement that
-the side owning the final block retain at least one non-king piece; and the
-requirement that the totals compose to $k$ as in \eqref{eq:K}.
-
-\emph{Soundness property.} Let $G$ be a legal game with $K(G) = k$ whose
-endpoint pattern is $\sigma$, and set $e$ to checkmate if $G$ ends
-in mate and to draw otherwise. Then the observed values of $G$ --- its
-per-pawn, per-block move counts, its capture blocks, and its totals ---
-satisfy every constraint of $M(\sigma, e, k)$. This holds because each
-constraint is individually a necessary condition of legality; the
-constraint-by-constraint argument is recorded in the repository's model
-audit, and the attribution of the mating side to the final block is sound
-precisely because $\sigma$ is a pattern of \emph{segment endpoints}
-(Definition~\ref{def:segments}), the mate being the last endpoint.
-Consequently, if $M(\sigma, e, 118)$ is infeasible for both values of $e$,
-then no legal game with endpoint pattern $\sigma$ attains $K = 118$. No
-claim is made in the converse direction: a satisfying assignment need not
-correspond to any legal game, and no conclusion of this paper rests on a
-feasibility verdict.
-
-Coverage is finite. An alternating pattern of $n \ge 5$ blocks has $S \ge 4$
-by the block count of Section~\ref{sec:switches}, so the sixteen decided
-instances --- the eight endpoint patterns of at most four blocks, under
-both endings
---- include every pattern that the refutations of
-Section~\ref{sec:switches} concern. CP-SAT decides
-each finite instance exactly; a solver timeout is surfaced as an error and
-never reported as infeasibility. The results, identical under both
-endings: all six endpoint patterns of at most three blocks are
-infeasible, and the model is feasible exactly for $\mathsf{BWBW}$ and
-$\mathsf{WBWB}$ --- in agreement with Theorem~\ref{thm:s3}, whose
-endpoint half asserts precisely that no endpoint pattern of at most
-three blocks occurs at $K = 118$. (The propositions of
-Section~\ref{sec:switches} refute critical-move patterns; the theorem
-carries the refutation over to endpoint patterns, which are what the
-model decides.) Removing
-the home-rank constraint changes exactly $\mathsf{BWB}$ and
-$\mathsf{WBW}$ from infeasible to feasible and leaves every other verdict
-unchanged, confirming that the lemma carries precisely the two cases
-Proposition~\ref{prop:threeblocks} assigns to it and that no other
-refutation of Section~\ref{sec:switches} depends on it.
-
-The soundness property cannot be established by testing, but violations
-of it can be exhibited: the constraint model accepts the exact
-assignment induced by the reference game of Appendix~\ref{app:witness},
-and both deciders return feasible for its endpoint pattern
-$\mathsf{BWBW}$. Three constraints that were, at stages of this work,
-stronger than legality --- the first of them the misreading against
-which Remark~\ref{rem:cap10caution} warns --- were each found by the
-constraint-by-constraint audit, repaired, and pinned by regression
-tests; none survives in the verdicts above, and the full record, with
-explicit refuting games, is in the repository.
-
-What a reader of these checks must trust: first, the summary of the
-Laws in Section~\ref{sec:rules} --- in particular that Articles
-9.6.1--9.6.2 end games automatically and that mate takes precedence on
-the final ply; both implementations below follow this project's reading
-of the Laws, so their agreement cannot vouch for the reading itself.
-Second, move generation. Every check above runs through
-\texttt{python-chess} \cite{pythonchess} (version pinned in the
-repository), and the obligations [H1], [H2], [H5], [H6] are facts about
-chess that we verify the generators respect, not facts we derive from
-them; but the reference game is also re-verified by the C
-implementation of Appendix~\ref{app:witness}, which shares no code, no
-board representation and no input parsing with \texttt{python-chess},
-and whose own generation is checked against externally published perft
-counts. What remains to be trusted here is therefore not one library
-but the proposition that two independently implemented move generators
-do not fail identically at the same positions. The reference game is an
-artefact produced by others \cite{murphy2020longest} and accepted by
-both verifiers, separating producer from judge.
-The claims-to-code map (\texttt{CLAIMS.md}), invocation commands, corpus
-and search statistics and the full audit record live in the companion
-repository \cite{repo}; the repository version corresponding to this
-paper is tag \texttt{v1.1.0}, archived at the DOI cited there.
-
-\begin{thebibliography}{99}
-
-\bibitem{euwe1929}
-M.~Euwe.
-\newblock Mengentheoretische Betrachtungen \"uber das Schachspiel.
-\newblock \emph{Proceedings of the Koninklijke Akademie van Wetenschappen
-  te Amsterdam}, 32:633--642, 1929.
-\newblock English translation: Mathematics --- set-theoretic
-  considerations on the game of chess, \emph{New Mathematics and Natural
-  Computation}, 12(1):11--20, 2016.
-
-\bibitem{morsehedlund1944}
-M.~Morse and G.~A. Hedlund.
-\newblock Unending chess, symbolic dynamics and a problem in semigroups.
-\newblock \emph{Duke Mathematical Journal}, 11(1):1--7, 1944.
-
-\bibitem{fide2014laws}
-FIDE.
-\newblock \emph{Laws of Chess: for competitions starting from 1 July 2014
-  till 30 June 2017}, FIDE Handbook E/01.
-\newblock \url{https://handbook.fide.com/chapter/E012014}.
-
-\bibitem{fide2023laws}
-FIDE.
-\newblock \emph{FIDE Laws of Chess}, FIDE Handbook E/01, in force from
-  1~January 2023.
-\newblock \url{https://handbook.fide.com/chapter/E012023}.
-
-\bibitem{hooperwhyld}
-D.~Hooper and K.~Whyld.
-\newblock \emph{The Oxford Companion to Chess}.
-\newblock Second edition, Oxford University Press, 1992.
-
-\bibitem{lomonosov2019}
-V.~Zakharov, M.~G. Mal'kovskii, and A.~I. Mostyaev.
-\newblock On solving the problem of 7-piece chess endgames.
-\newblock \emph{Programming and Computer Software}, 45:96--98, 2019.
-
-\bibitem{top8dtm}
-Lomonosov tablebases: 8 longest 7-man checkmates.
-\newblock Project article, Moscow State University,
-  \url{http://tb7.chessok.com/articles/Top8DTM_eng}; archived at
-  \url{https://web.archive.org/web/20250120123112/https://tb7.chessok.com/articles/Top8DTM_eng}.
-
-\bibitem{shannon1950}
-C.~E. Shannon.
-\newblock Programming a computer for playing chess.
-\newblock \emph{Philosophical Magazine}, Series~7, 41(314):256--275,
-  1950.
-
-\bibitem{steinerberger2015}
-S.~Steinerberger.
-\newblock On the number of positions in chess without promotion.
-\newblock \emph{International Journal of Game Theory}, 44(3):761--767,
-  2015.
-
-\bibitem{gourion2022}
-D.~Gourion.
-\newblock An upper bound for the number of chess diagrams without
-  promotion.
-\newblock \emph{ICGA Journal}, 44(2):44--55, 2022. arXiv:2112.09386.
-
-\bibitem{tromppositions}
-J.~Tromp.
-\newblock ChessPositionRanking.
-\newblock Software repository, 2021--2022,
-  \url{https://github.com/tromp/ChessPositionRanking}. Estimates
-  $(4.82 \pm 0.03) \times 10^{44}$ legal chess positions.
-
-\bibitem{fraenkel1981}
-A.~S. Fraenkel and D.~Lichtenstein.
-\newblock Computing a perfect strategy for $n \times n$ chess requires
-  time exponential in $n$.
-\newblock \emph{Journal of Combinatorial Theory, Series A},
-  31(2):199--214, 1981.
-
-\bibitem{dawson1911}
-T.~R. Dawson.
-\newblock [The longest game under the 50-move rule.]
-\newblock \emph{The Chess Amateur}, May and June 1911. Not seen; cited
-  after \cite{bonsdorff1974}, and attested by Dawson himself in
-  \emph{The Fairy Chess Review} 6(10):75, February 1947.
-
-\bibitem{fabel1947}
-K.~Fabel.
-\newblock 50-move rule. Letter in the column ``Out of the Mails'' (ed.\
-  T.~R. Dawson).
-\newblock \emph{The Fairy Chess Review}, 6(10):76, February 1947; scan
-  at \url{https://www.theproblemist.org/pdf/fcr/vol_6/FCR_105.pdf},
-  archived at
-  \url{https://web.archive.org/web/20260807025539/https://www.theproblemist.org/pdf/fcr/vol_6/FCR_105.pdf}.
-\newblock Constructs a game whose last move is White's $5{,}899$th;
-  treated in more detail in his book \emph{Am Rande des Schachbretts}
-  (Schwalben-B\"ucherei No.~1, Hamburg, 1947).
+\begin{thebibliography}{9}
 
 \bibitem{bonsdorff1974}
-E.~Bonsdorff, K.~Fabel, and O.~Riihimaa.
-\newblock \emph{Ajedrez y matem\'aticas}.
-\newblock Colecci\'on Escaques No.~48, Ediciones Mart\'inez Roca,
-  Barcelona, 1974; Spanish translation (by A.~Puig) of \emph{Schach und
-  Zahl: Unterhaltsame Schachmathematik}, 2nd edition, Walter Rau Verlag,
-  D\"usseldorf, 1971.
-\newblock Chapter ``\,?`Cu\'anto dura una partida de ajedrez?''\,,
-  pages 14--17.
+E.~Bonsdorff, K.~Fabel, and O.~Riihimaa,
+\emph{Schach und Zahl: Unterhaltsame Schachmathematik},
+2nd ed., Walter Rau Verlag, D\"usseldorf, 1971.
+Spanish translation: \emph{Ajedrez y matem\'aticas},
+Ediciones Mart\'inez Roca, Barcelona, 1974.
+
+\bibitem{euwe1929}
+M.~Euwe,
+Mengentheoretische Betrachtungen \"uber das Schachspiel,
+\emph{Proceedings of the Koninklijke Akademie van Wetenschappen te Amsterdam}
+\textbf{32} (1929), 633--642.
+
+\bibitem{fide2014laws}
+FIDE,
+\emph{Laws of Chess: For competitions starting from 1 July 2014 till
+30 June 2017},
+FIDE Handbook E/01, 2014,
+\url{https://handbook.fide.com/chapter/E012014}.
+
+\bibitem{fide2023laws}
+FIDE,
+\emph{FIDE Laws of Chess: Taking effect from 1 January 2023},
+FIDE Handbook E/01, 2023,
+\url{https://handbook.fide.com/chapter/e012023}.
 
 \bibitem{heimo2004}
-O.~Heimo.
-\newblock Pisin shakkipeli / The longest chess game.
-\newblock \emph{Suomen Teht\"av\"aniekat}, 58(4--5):159--161, September
-  2004.
-\newblock \url{https://www.tehtavaniekat.fi/wp-content/uploads/vanhatlehdet/ST_2004_4-5.pdf}.
-\newblock See also his Retros mailing-list post of 14~June 2007,
-  archived at
-  \url{https://web.archive.org/web/20230202114220/http://www.pairlist.net/pipermail/retros/2007-June/002029.html}.
-
-\bibitem{forum2011}
-I have calculated the longest possible chess game.
-\newblock Chess.com forum thread, started 9~July 2011, accessed August
-  2026.
-\newblock \url{https://www.chess.com/forum/view/fun-with-chess/i-have-calculated-the-longest-possible-chess-game-6173613}.
-\newblock Deranged counts $96 + 22 = 118$ counter-resetting moves
-  (post~1); cobra91 and ilmago add the four-switch parity correction
-  (posts~5 and~8, 2011); falconbrook (J.~Falkenbach) gives the first
-  three-switch plan, reaching $5{,}898\tfrac12$ moves in the 50-move
-  setting (post~80, 29~September 2012).
-\newblock Archived at
-  \url{https://web.archive.org/web/20260807025312/https://www.chess.com/forum/view/fun-with-chess/i-have-calculated-the-longest-possible-chess-game-6173613};
-  post~80 at
-  \url{https://web.archive.org/web/20260807025332/https://www.chess.com/forum/view/fun-with-chess/i-have-calculated-the-longest-possible-chess-game-6173613?page=4}.
-
-\bibitem{forum2015}
-What's the greatest number of moves that could ever be achieved in a
-  chess game?
-\newblock Chess.com forum thread, started 4~February 2015, accessed
-  August 2026.
-\newblock \url{https://www.chess.com/forum/view/general/whats-the-greatest-number-of-moves-that-could-ever-be-achieved-in-a-chess-game}.
-\newblock The 75-move-rule analysis with four colour switches is
-  Tatzelwurm's (post~39, 27~February 2015); the three-switch schedule
-  ending on White's $8{,}849$th move --- $17{,}697$ plies --- is
-  Deedlit's (post~46, 4~April 2015), confirmed by Tatzelwurm (post~47,
-  5~April 2015).
-\newblock Archived at
-  \url{https://web.archive.org/web/20260807025353/https://www.chess.com/forum/view/general/whats-the-greatest-number-of-moves-that-could-ever-be-achieved-in-a-chess-game};
-  the cited posts at
-  \url{https://web.archive.org/web/20260807025414/https://www.chess.com/forum/view/general/whats-the-greatest-number-of-moves-that-could-ever-be-achieved-in-a-chess-game?page=2}
-  and
-  \url{https://web.archive.org/web/20260807025435/https://www.chess.com/forum/view/general/whats-the-greatest-number-of-moves-that-could-ever-be-achieved-in-a-chess-game?page=3}.
+O.~Heimo,
+Pisin shakkipeli / The longest chess game,
+\emph{Suomen Teht\"av\"aniekat} \textbf{58} (2004), no.~4--5, 159--162,
+\url{https://www.tehtavaniekat.fi/wp-content/uploads/vanhatlehdet/ST_2004_4-5.pdf}.
 
 \bibitem{labelle2015longest}
-F.~Labelle.
-\newblock The longest possible chess game, and bounds on the number of
-  possible chess games.
-\newblock Web page, created 14~November 2015, last updated 17~October
-  2020, accessed August 2026.
-\newblock \url{https://wismuth.com/chess/longest-game.html}; archived at
-  \url{https://web.archive.org/web/20260806171843/https://wismuth.com/chess/longest-game.html};
-  the $17{,}697$-ply game's PGN archived at
-  \url{https://web.archive.org/web/20260807025454/https://wismuth.com/chess/longest-game/length8848.5.pgn}.
+F.~Labelle,
+The longest possible chess game, and bounds on the number of possible chess
+games, 2015, updated 2020,
+\url{https://wismuth.com/chess/longest-game.html}.
+
+\bibitem{morsehedlund1944}
+M.~Morse and G.~A.~Hedlund,
+Unending chess, symbolic dynamics and a problem in semigroups,
+\emph{Duke Mathematical Journal} \textbf{11} (1944), no.~1, 1--7.
 
 \bibitem{murphy2020longest}
-T.~Murphy~VII.
-\newblock Is this the longest Chess game?
-\newblock In \emph{A Record of the Proceedings of SIGBOVIK 2020}, pages
-  20--31. The Association for Computational Heresy, April 2020.
-\newblock \url{http://tom7.org/chess/longest.pdf}; archived at
-  \url{https://web.archive.org/web/20260807025219/http://tom7.org/chess/longest.pdf}.
-
-\bibitem{tromp-longest}
-J.~Tromp.
-\newblock The longest chess game.
-\newblock Web note, \url{https://tromp.github.io/chess/longest.html},
-  accessed August 2026; archived at
-  \url{https://web.archive.org/web/20260806171910/https://tromp.github.io/chess/longest.html}.
-
-\bibitem{bolton2021}
-A.~Bolton.
-\newblock The longest chess game.
-\newblock Talk at the MathsJam Gathering, 2021.
-\newblock \url{https://mathsjam.com/assets/talks/2021/AlexanderBolton-TheLongestChessGame.pdf};
-  archived at
-  \url{https://web.archive.org/web/20260807025517/https://mathsjam.com/assets/talks/2021/AlexanderBolton-TheLongestChessGame.pdf}.
-
-\bibitem{oeisA048987}
-OEIS Foundation Inc.
-\newblock Entry A048987 (number of possible chess games at the end of
-  the $n$-th ply) in the On-Line Encyclopedia of Integer Sequences.
-\newblock \url{https://oeis.org/A048987}, accessed August 2026.
-
-\bibitem{turnbull2001}
-R.~Turnbull.
-\newblock Dead reckoning: a new discovery in problem chess.
-\newblock \emph{The Problemist}, July 2001, pages 140--141.
-
-\bibitem{buchanan2001}
-A.~Buchanan.
-\newblock Dead reckoning: castling \& en passant.
-\newblock \emph{StrateGems}, 16, October--December 2001.
-
-\bibitem{wfcccodex}
-World Federation for Chess Composition.
-\newblock \emph{Codex for Chess Composition}, Article 17A (dead-position
-  rule).
-\newblock \url{https://www.wfcc.ch/1999-2012/codex/}.
-
-\bibitem{ambrona2022}
-M.~Ambrona.
-\newblock A practical algorithm for chess unwinnability.
-\newblock In \emph{11th International Conference on Fun with Algorithms
-  (FUN 2022)}, LIPIcs 226, pages 2:1--2:20, 2022.
+T.~Murphy VII,
+Is this the longest chess game?,
+in \emph{A Record of the Proceedings of SIGBOVIK 2020}, 2020, pp.~20--31,
+\url{https://tom7.org/chess/longest.pdf}.
 
 \bibitem{repo}
-J.~Yim.
-\newblock Companion repository for ``The maximum length of a chess game
-  under the FIDE Laws is 17,697 plies''.
-\newblock \url{https://github.com/junyeobe0315/long_chess}, 2026.
-\newblock Version \texttt{v1.1.0}, archived at
-  \url{https://doi.org/10.5281/zenodo.21828025}.
-
-\bibitem{fide2017laws}
-FIDE.
-\newblock \emph{Laws of Chess: taking effect from 1 July 2017}, FIDE
-  Handbook E/01.
-\newblock \url{https://handbook.fide.com/chapter/E012017}.
-
-\bibitem{pythonchess}
-N.~Fiekas.
-\newblock python-chess: a chess library for Python, version 1.11.2,
-  25~February 2025.
-\newblock \url{https://github.com/niklasf/python-chess}; release
-  \url{https://github.com/niklasf/python-chess/releases/tag/v1.11.2}.
-
-\bibitem{burnett-pieces}
-C.~M.~L. Burnett.
-\newblock SVG chess pieces.
-\newblock Wikimedia Commons, 2006,
-  \url{https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces}.
-\newblock Triple-licensed under the GFDL, the 3-clause BSD license and
-  the GPL; used here under the BSD option.
-
-\bibitem{ortools}
-L.~Perron and F.~Didier.
-\newblock \emph{CP-SAT}, version 9.15.6755. Google, 2026.
-\newblock \url{https://developers.google.com/optimization/cp/cp_solver/}.
+J.~Yim,
+\emph{long\_chess: companion repository for ``The maximum length of a chess
+game under the FIDE Laws is 17,697 plies''},
+software version~1.1.0, Git commit
+\nolinkurl{2000be4d71d3e5ea72e565792c559a03e3dbc5fe},
+Zenodo, 2026, all-versions DOI:
+\url{https://doi.org/10.5281/zenodo.21828025}.
+Exact software snapshot:
+\url{https://github.com/junyeobe0315/long_chess/tree/2000be4d71d3e5ea72e565792c559a03e3dbc5fe}.
 
 \end{thebibliography}
 

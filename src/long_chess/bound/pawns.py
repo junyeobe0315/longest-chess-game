@@ -3,22 +3,22 @@
 The whole project sits on this number, and it now comes from one identity that
 does not care how the game ends:
 
-    K = (P − O) + (C + T)  ≤  88 + 30  =  118
+    K = (P − Cₚ) + (C + T)  ≤  88 + 30  =  118
 
 with
 
     P   pawn moves
     C   captures
-    O   overlaps — moves that are both, i.e. diagonal pawn captures
+    Cₚ  pawn captures — moves that are both, i.e. diagonal pawn captures
     T   the closing segment: 1 if quiet moves follow the last critical move,
         else 0
 
 `K` appears as an *upper* bound, so every term above the line needs an upper
-bound and every term below it a **lower** bound. Overestimating `O` would narrow
-the bound without justification — it would rule out games that are in fact
-legal.
+bound and every term below it a **lower** bound. Overestimating `Cₚ` would
+narrow the bound without justification — it would rule out games that are in
+fact legal.
 
-`P − O ≤ 88` is the half that is easy to get wrong, and an earlier version of
+`P − Cₚ ≤ 88` is the half that is easy to get wrong, and an earlier version of
 this module did get it wrong; see :data:`UNRESOLVED_ORIGIN_PAIR_MOVE_CAP` and
 ``tests/test_defects.py::TestTheUnresolvedPairCapWasFalse``, which pins the
 correction.
@@ -68,7 +68,7 @@ on its own — see :func:`captures_plus_closing_bound`.
 class FileLemma:
     """Two pawns facing each other on a file cannot both get past.
 
-    Machine-checked below rather than asserted, because the whole overlap term
+    Machine-checked below rather than asserted, because the whole pawn-capture term
     rests on it.
     """
 
@@ -190,7 +190,7 @@ def check_home_rank_lemma() -> HomeRankLemma:
 
 
 # ---------------------------------------------------------------------------
-# The origin pair, which is where `P − O ≤ 88` comes from
+# The origin pair, which is where `P − Cₚ ≤ 88` comes from
 # ---------------------------------------------------------------------------
 
 GONE = 0
@@ -367,20 +367,20 @@ def check_origin_pair_cap() -> OriginPairSearch:
 
 
 @dataclass(frozen=True, slots=True)
-class PawnOverlapBound:
-    """The maximiser of ``P − O`` over how many origin files are resolved."""
+class NetPawnMoveBound:
+    """The maximiser of ``P − Cₚ`` over how many origin files are resolved."""
 
     resolved_files: int
     pawn_moves: int
-    overlaps: int
+    pawn_captures: int
 
     @property
     def value(self) -> int:
-        return self.pawn_moves - self.overlaps
+        return self.pawn_moves - self.pawn_captures
 
     def describe(self) -> str:
         return (
-            f"P − O ≤ {self.pawn_moves} − {self.overlaps} = {self.value}, "
+            f"P − Cₚ ≤ {self.pawn_moves} − {self.pawn_captures} = {self.value}, "
             f"at f = {self.resolved_files}"
         )
 
@@ -404,34 +404,34 @@ def pawn_moves_ceiling(resolved_files: int) -> int:
     )
 
 
-MAX_PAWN_MINUS_OVERLAP = 88
+MAX_NET_PAWN_MOVES = 88
 """88. The maximum of ``min(96, 80 + 2f) − f`` over ``f ≤ 8``, at ``f = 8``.
 
-`O ≥ f` because resolving file `i` means a pawn of *that* origin pair made a
+`Cₚ ≥ f` because resolving file `i` means a pawn of *that* origin pair made a
 diagonal capture, and a diagonal capture has exactly one mover, whose origin
-file is one file. Distinct resolved files therefore demand distinct overlap
+file is one file. Distinct resolved files therefore demand distinct pawn-capture
 moves.
 
-Derived by :func:`pawn_minus_overlap_bound` rather than typed in; this constant
+Derived by :func:`net_pawn_move_bound` rather than typed in; this constant
 is the answer, kept so the model and the cross-check can be read against it.
 """
 
 
-def pawn_minus_overlap_bound() -> PawnOverlapBound:
-    """Maximise ``P − O`` subject to ``P ≤ min(96, 80 + 2f)`` and ``O ≥ f``.
+def net_pawn_move_bound() -> NetPawnMoveBound:
+    """Maximise ``P − Cₚ`` subject to ``P ≤ min(96, 80 + 2f)`` and ``Cₚ ≥ f``.
 
     Taking the maximum over `f` is what makes this a bound over *all* games
-    rather than a statement about games with eight overlaps. Asserting
-    ``overlaps ≥ 8`` outright is only true *because* `K = 118` forces it, and is
+    rather than a statement about games with eight pawn captures. Asserting
+    ``pawn_captures ≥ 8`` outright is only true *because* `K = 118` forces it, and is
     therefore circular; a shape that cannot reach 96 pawn moves needs fewer
-    files resolved and must be charged fewer overlaps.
+    files resolved and must be charged fewer pawn captures.
     """
     return max(
         (
-            PawnOverlapBound(
+            NetPawnMoveBound(
                 resolved_files=resolved,
                 pawn_moves=pawn_moves_ceiling(resolved),
-                overlaps=resolved,
+                pawn_captures=resolved,
             )
             for resolved in range(FILES + 1)
         ),
@@ -439,14 +439,14 @@ def pawn_minus_overlap_bound() -> PawnOverlapBound:
     )
 
 
-MINIMUM_OVERLAPS = 8
-"""Overlaps forced on any game in which all sixteen pawns promote.
+MINIMUM_PAWN_CAPTURES = 8
+"""Pawn captures forced on any game in which all sixteen pawns promote.
 
 Not a free lower bound for every game — a game where no pawn ever captures has
 none. The argument needs the promotions:
 
 - A pawn only changes file by capturing, so a sideways move *is* a capture —
-  one move doing the work of two critical moves, which is exactly an overlap.
+  one move doing the work of two critical moves, which is exactly a pawn capture.
 - Fix a file ``i``. If its origin pair is unresolved, both its pawns spend the
   whole game on file ``i``, one travelling up and one down, and
   :func:`check_file_lemma` says they cannot both get past. So if both promote,
@@ -531,17 +531,17 @@ MAX_CAPTURES_PLUS_CLOSING = 30
 @dataclass(frozen=True, slots=True)
 class CriticalBound:
     pawn_moves: int
-    overlaps: int
+    pawn_captures: int
     resolved_files: int
     captures_plus_closing: int
 
     @property
-    def pawn_minus_overlap(self) -> int:
-        return self.pawn_moves - self.overlaps
+    def net_pawn_moves(self) -> int:
+        return self.pawn_moves - self.pawn_captures
 
     @property
     def total(self) -> int:
-        return self.pawn_minus_overlap + self.captures_plus_closing
+        return self.net_pawn_moves + self.captures_plus_closing
 
     @property
     def max_plies(self) -> int:
@@ -557,24 +557,24 @@ class CriticalBound:
 
     def describe(self) -> str:
         return (
-            f"K ≤ (P − O) + (C + T) ≤ {self.pawn_minus_overlap} + "
+            f"K ≤ (P − Cₚ) + (C + T) ≤ {self.net_pawn_moves} + "
             f"{self.captures_plus_closing} = {self.total};  "
             f"at most {self.max_plies} ply before the switch argument"
         )
 
 
 def critical_bound() -> CriticalBound:
-    """``K ≤ 118``, from ``P − O ≤ 88`` and ``C + T ≤ 30``.
+    """``K ≤ 118``, from ``P − Cₚ ≤ 88`` and ``C + T ≤ 30``.
 
     One formula covers every ending. The two profiles in
     :func:`ending_profiles` are how a game *reaches* 30; neither is the source
     of truth, because a bound that case-split on the ending would have to be
     re-argued every time a new way of ending a game came up.
     """
-    envelope = pawn_minus_overlap_bound()
+    envelope = net_pawn_move_bound()
     return CriticalBound(
         pawn_moves=envelope.pawn_moves,
-        overlaps=envelope.overlaps,
+        pawn_captures=envelope.pawn_captures,
         resolved_files=envelope.resolved_files,
         captures_plus_closing=captures_plus_closing_bound(),
     )
@@ -590,7 +590,7 @@ class EqualityConditions:
 
     resolved_files: int
     pawn_moves: int
-    overlaps: int
+    pawn_captures: int
     captures_plus_closing: int
 
     @property
@@ -605,7 +605,7 @@ class EqualityConditions:
     def describe(self) -> str:
         return (
             f"K = {MAX_CRITICAL_SEGMENTS} forces f = {self.resolved_files}, "
-            f"P = {self.pawn_moves}, O = {self.overlaps}, "
+            f"P = {self.pawn_moves}, Cₚ = {self.pawn_captures}, "
             f"C + T = {self.captures_plus_closing}; every pawn makes "
             f"{self.moves_per_pawn} single-square moves and promotes"
         )
@@ -618,18 +618,18 @@ def equality_witnesses(
 
     Enumerated rather than argued. `K = 118` is the maximum of a sum of
     individually bounded terms, so it should pin all of them — but "should" is
-    how the free ``overlaps ≥ 8`` axiom got in, so this checks.
+    how the free ``pawn_captures ≥ 8`` axiom got in, so this checks.
     """
     witnesses = []
     for resolved in range(FILES + 1):
         ceiling = pawn_moves_ceiling(resolved)
         for pawn_moves in range(ceiling + 1):
-            # An overlap is a pawn move and a capture, so it is bounded by both.
-            for overlaps in range(resolved, min(pawn_moves, MAX_CAPTURABLE) + 1):
-                captures_plus_closing = target - (pawn_moves - overlaps)
+            # A pawn capture is a pawn move and a capture, so it is bounded by both.
+            for pawn_captures in range(resolved, min(pawn_moves, MAX_CAPTURABLE) + 1):
+                captures_plus_closing = target - (pawn_moves - pawn_captures)
                 if 0 <= captures_plus_closing <= MAX_CAPTURES_PLUS_CLOSING:
                     witnesses.append(
-                        (resolved, pawn_moves, overlaps, captures_plus_closing)
+                        (resolved, pawn_moves, pawn_captures, captures_plus_closing)
                     )
     return witnesses
 
@@ -647,10 +647,10 @@ def equality_conditions(target: int = MAX_CRITICAL_SEGMENTS) -> EqualityConditio
             f"K = {target} admits {len(witnesses)} term assignments, not 1; "
             "there is no equality case to state"
         )
-    resolved, pawn_moves, overlaps, captures_plus_closing = witnesses[0]
+    resolved, pawn_moves, pawn_captures, captures_plus_closing = witnesses[0]
     return EqualityConditions(
         resolved_files=resolved,
         pawn_moves=pawn_moves,
-        overlaps=overlaps,
+        pawn_captures=pawn_captures,
         captures_plus_closing=captures_plus_closing,
     )

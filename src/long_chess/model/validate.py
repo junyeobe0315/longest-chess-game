@@ -59,7 +59,7 @@ class Observation:
 
     total_pawn_moves: int
     total_captures: int
-    overlaps: int
+    pawn_captures: int
     closing_segment: int
     """Quiet moves after the last critical one, as a 0/1 segment count."""
 
@@ -68,7 +68,7 @@ class Observation:
         return (
             self.total_pawn_moves
             + self.total_captures
-            - self.overlaps
+            - self.pawn_captures
             + self.closing_segment
         )
 
@@ -118,7 +118,7 @@ def observe(skeleton: Skeleton) -> Observation:
         capture_block=capture_block,
         total_pawn_moves=sum(1 for e in events if e.kind in PAWN_KINDS),
         total_captures=sum(1 for e in events if e.is_capture),
-        overlaps=sum(1 for e in events if e.kind is EventKind.PAWN_CAPTURE),
+        pawn_captures=sum(1 for e in events if e.kind is EventKind.PAWN_CAPTURE),
         closing_segment=sum(1 for e in events if e.kind is EventKind.MATE),
     )
 
@@ -168,7 +168,7 @@ def validate(skeleton: Skeleton) -> ValidationResult:
     for key, block in observation.capture_block.items():
         model.add(handles.capture_block[key][block] == 1)
 
-    model.add(handles.overlaps == observation.overlaps)
+    model.add(handles.pawn_captures == observation.pawn_captures)
     model.add(handles.closing_segment == observation.closing_segment)
 
     solver = cp_model.CpSolver()

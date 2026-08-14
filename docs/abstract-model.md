@@ -1,6 +1,7 @@
 # The abstract model
 
-> Backs §7.2 of the paper ([paper/main.tex](../paper/main.tex)): the CP-SAT
+> Backs the ancillary cross-checks named in the paper's "Data and code
+> availability" section ([paper/main.tex](../paper/main.tex)): the CP-SAT
 > and arithmetic cross-checks, constraint by constraint. The cross-checks
 > are not the proof; the counting argument of the paper's §§3–4 is.
 
@@ -33,8 +34,8 @@ load-bearing for exactly one constraint; an earlier version of this sentence
 said "critical events", and the correction below records what that reading
 would have broken.
 
-For any shape with `S ≤ 2`, a yes would be a 17,698-ply game. All five come back
-no, under both endings.
+For any shape with `S ≤ 2`, a yes would leave a 17,698-ply game open. All five
+come back no, under both endings.
 
 | shape | S | why counting kills it |
 |---|---|---|
@@ -104,7 +105,7 @@ What `long_chess.model.abstract` actually declares:
 | `everything_captured` | bool | draw only: all 30 taken, so no closing segment |
 | `home_rank_opened` | bool | an enemy pawn was captured in block 0 |
 | `resolved_files` | 0..8 | files resolved by a sideways pawn move |
-| `overlaps` | 0..96 | moves that are both a pawn move and a capture |
+| `pawn_captures` | 0..96 | moves that are both a pawn move and a capture |
 
 Derived, never free: an event's actor, and hence the whole of `S`. That is the
 observation the reduction rests on — only the opposing side can capture a
@@ -134,9 +135,9 @@ that is what a reader has to check.
 | checkmate: the mating side keeps at least one non-king unit | a lone king cannot mate, and the mating side *is* the last block's colour because shapes are endpoint sequences and the mate is the last endpoint. **This is all checkmate implies** — the mated side may keep most of its army |
 | a draw taking all 30 leaves king against king, so no closing segment | K vs K is dead under FIDE 5.2.2, so the game ends on that move |
 | a pawn's first-block moves ≤ 4 unless an enemy pawn was captured there | the home-rank lemma, proved in `bound.invariant` |
-| `pawn_moves ≤ 80 + 2·resolved` and `overlaps ≥ resolved` | the origin-pair cap and the file lemma, both in `bound.pawns` |
-| `overlaps ≤ pawn_moves` and `overlaps ≤ captures` | an overlap is a pawn move *and* a capture |
-| `pawn_moves + captures − overlaps + closing = K` | the definition of `K`, by inclusion–exclusion |
+| `pawn_moves ≤ 80 + 2·resolved` and `pawn_captures ≥ resolved` | the origin-pair cap and the file lemma, both in `bound.pawns` |
+| `pawn_captures ≤ pawn_moves` and `pawn_captures ≤ captures` | a pawn capture is a pawn move *and* a capture |
+| `pawn_moves + captures − pawn_captures + closing = K` | the definition of `K`, by inclusion–exclusion |
 | `ending` must be `checkmate` or `draw` | not a constraint — a `ValueError`, because falling through to the draw branch relaxed the model silently |
 
 That checkmate row read "the mated side loses all 15; the mating side keeps
@@ -151,7 +152,7 @@ other `K`. Pinned by
 `resolved_files` is a **free** variable, which is what makes the coupling safe:
 every legal game satisfies both rows at its own true `f`, so the solver only has
 to find one value that works, and it may find a smaller one. Pinning it, or
-asserting `overlaps ≥ 8` outright, would be stronger than legality.
+asserting `pawn_captures ≥ 8` outright, would be stronger than legality.
 
 That row read `pawn_moves ≤ 32 + 8·resolved` until the unresolved cap of 4 it
 came from was found to be false — it ignored the case where one of the two pawns

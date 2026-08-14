@@ -19,7 +19,7 @@ vocabulary and the numbers, and disagreement is what it is for.
 ``tests/test_independent.py`` pins these literals against the canonical
 definitions so the two cannot drift apart silently.
 
-The reasoning. `K = (P − O) + (C + T) ≤ 88 + 30 = 118`, and reaching 118 needs
+The reasoning. `K = (P − Cₚ) + (C + T) ≤ 88 + 30 = 118`, and reaching 118 needs
 every term at its extreme — in particular all 96 pawn moves. The only question
 is therefore **how many pawn moves a block shape permits**, and that has a
 closed form.
@@ -258,8 +258,8 @@ def analyse(
                         for closing in closing_options:
                             for resolved in range(FILES + 1):
                                 fits = min(moves, pawn_ceiling(resolved))
-                                # An overlap is a pawn move and a capture, so
-                                # the `resolved` overlaps this f demands have to
+                                # A pawn capture is a pawn move and a capture, so
+                                # the `resolved` pawn_captures this f demands have to
                                 # fit inside both totals.
                                 if resolved > fits or resolved > captures:
                                     continue

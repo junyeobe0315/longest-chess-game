@@ -14,14 +14,14 @@ import sys
 
 from long_chess.bound import (
     FILES,
-    MAX_PAWN_MINUS_OVERLAP,
+    MAX_NET_PAWN_MOVES,
     captures_plus_closing_bound,
     check_file_lemma,
     check_origin_pair_cap,
     critical_bound,
     ending_profiles,
     equality_conditions,
-    pawn_minus_overlap_bound,
+    net_pawn_move_bound,
     pawn_moves_ceiling,
     ply_bound,
     refutations,
@@ -69,12 +69,12 @@ def main(argv: list[str] | None = None) -> int:
         f"both promote: {lemma.goal_reachable}  (must be False)"
     )
     if lemma.goal_reachable:
-        print("FAIL: the overlap term is not justified", file=sys.stderr)
+        print("FAIL: the pawn-capture term is not justified", file=sys.stderr)
         return 1
 
-    envelope = pawn_minus_overlap_bound()
+    envelope = net_pawn_move_bound()
     print()
-    print("P − O         P ≤ min(96, 80 + 2f) and O ≥ f, maximised over f")
+    print("P − Cₚ        P ≤ min(96, 80 + 2f) and Cₚ ≥ f, maximised over f")
     print("              f:  " + "  ".join(f"{f:>2}" for f in range(FILES + 1)))
     print(
         "              P:  "
@@ -98,7 +98,7 @@ def main(argv: list[str] | None = None) -> int:
     bound = critical_bound()
     print()
     print(f"bound         {bound.describe()}")
-    if bound.total != MAX_PAWN_MINUS_OVERLAP + captures_plus_closing_bound():
+    if bound.total != MAX_NET_PAWN_MOVES + captures_plus_closing_bound():
         print("FAIL: the terms do not add up", file=sys.stderr)
         return 1
 

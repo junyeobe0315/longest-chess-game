@@ -5,8 +5,8 @@
     uv run python scripts/check_movegen.py --deep    # perft to depth 6, ~30 s
 
 Every other mechanical check in this repository decides chess questions with
-python-chess, so python-chess's move generation sits inside the trusted base of
-the paper's Appendix B. `checker/longest_check.c` is a second generator, written
+python-chess, so python-chess's move generation sits inside the trusted base
+stated in docs/verification.md. `checker/longest_check.c` is a second generator, written
 against the FIDE Laws in a different language and a different board
 representation, and this script is what makes the two of them meet: it compiles
 the C, replays the witness under both, and compares the results byte for byte.
@@ -217,7 +217,7 @@ def check_corpus(binary: Path, positions: int, seed: int) -> Check:
 
     The same four obligations are checked on the python side by
     `long_chess.bound.invariant`. Passing there leaves python-chess inside the
-    trusted base of Lemma 4.3; passing here does not.
+    trusted base of Lemma 4.5; passing here does not.
     """
     completed = run([str(binary), "--corpus", str(positions), "--seed", str(seed)])
     if completed.returncode != 0:

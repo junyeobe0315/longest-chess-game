@@ -9,25 +9,25 @@ message: >-
   itself only when discussing the verification tooling specifically.
 type: software
 title: >-
-  long_chess: companion repository for "The maximum length of a chess game
-  under the FIDE Laws is 17,697 plies"
+  longest-chess-game: companion repository for "The maximum length of a chess game
+  under the 2023 FIDE Laws"
 authors:
   - family-names: Yim
     given-names: Junyeop
     email: junyeobe0315@smail.kongju.ac.kr
-repository-code: "https://github.com/junyeobe0315/long_chess"
+repository-code: "https://github.com/junyeobe0315/longest-chess-game"
 license: MIT
 keywords:
   - chess
   - combinatorics
   - longest chess game
   - computer-assisted proof
-version: 1.1.0
-date-released: "2026-08-07"
+version: 1.2.0
+date-released: "2026-08-14"
 doi: 10.5281/zenodo.21828025
 preferred-citation:
   type: unpublished
-  title: "The maximum length of a chess game under the FIDE Laws is 17,697 plies"
+  title: "The maximum length of a chess game under the 2023 FIDE Laws"
   authors:
     - family-names: Yim
       given-names: Junyeop

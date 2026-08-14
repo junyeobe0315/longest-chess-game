@@ -135,7 +135,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"observed   {observation.shape}  S = {observation.shape.switches}")
         print(
             f"           P={observation.total_pawn_moves} "
-            f"C={observation.total_captures} O={observation.overlaps} "
+            f"C={observation.total_captures} Cₚ={observation.pawn_captures} "
             f"M={observation.closing_segment}  ->  K={observation.k}"
         )
         print(f"accepted   {result.accepted}  ({result.status})")

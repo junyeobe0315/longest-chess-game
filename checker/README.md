@@ -5,11 +5,12 @@ one C99 file, standard library only, no dynamic allocation. It reads
 `data/longest.pgn`, resolves its SAN for itself, replays it under its own
 reading of the ending rules, and reports how long the game is and how it ends.
 
-It exists to make one sentence of the paper's Appendix B smaller.
+It exists to make one item of this project's trusted base smaller.
 
 ## What it is for
 
-Appendix B states what a sceptical reader has to trust. Two things are on that
+[`docs/verification.md`](../docs/verification.md) states what a sceptical
+reader has to trust. Two things are on that
 list: the summary of the FIDE termination rules, and the move generation of
 python-chess, which every mechanical check in this repository went through.
 
@@ -72,11 +73,11 @@ once the suite reports one.
 
 Thirty-three hand-written positions, each pinning one Law by article number:
 en passant including the rank-pin case that a generator handling pins by ray
-rather than by make/test/unmake gets wrong (Art. 3.7d, 3.9), castling in eight
-variations including the one where b1 is attacked and castling is still legal
-(Art. 3.8b), promotion and underpromotion (Art. 3.7e), pins and double check
-(Art. 3.9), checkmate and stalemate (Art. 5.1.1, 5.2.1), and eleven material
-combinations (Art. 5.2.2).
+rather than by make/test/unmake gets wrong (Art. 3.7.3.1–3.7.3.2, 3.9.2),
+castling in eight variations including the one where b1 is attacked and
+castling is still legal (Art. 3.8.2), promotion and underpromotion
+(Art. 3.7.3.3), pins and double check (Art. 3.9), checkmate and stalemate
+(Art. 5.1.1, 5.2.1), and eleven material combinations (Art. 5.2.2).
 
 Several cases are stated as a complete move list rather than as "this move is
 legal", so a move that should be missing is an absence the reader can see rather
@@ -146,7 +147,7 @@ the four claims about the rules of chess that the home-rank lemma leans on —
 
 Those four are corpus-checked on the Python side too, which is exactly why they
 are here: passing there leaves python-chess inside the trusted base of
-Lemma 4.3. The walk is biased towards pawn moves and captures, because an
+Lemma 4.5. The walk is biased towards pawn moves and captures, because an
 unbiased walk almost never produces the promotions, double pushes and en passant
 captures the obligations would break on; the run prints how many of each it
 actually saw, so the bias can be judged rather than assumed.
@@ -187,4 +188,4 @@ them:
   independence criteria, the mutation experiments that measure what each check
   is worth, and the honest limits.
 - [`CLAIMS.md`](../CLAIMS.md) — what this establishes, mapped against the
-  paper's Appendices A and B.
+  paper's numbered statements.

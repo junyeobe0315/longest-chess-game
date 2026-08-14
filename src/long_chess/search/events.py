@@ -28,7 +28,7 @@ class EventKind(StrEnum):
     PAWN_CAPTURE = "pawn-capture"
     """A pawn capturing: one move doing the work of two critical moves.
 
-    These are the overlaps in ``K ≤ 96 + 30 − 8``, and there are exactly 8.
+    These are the ``Cₚ`` in ``K ≤ 96 + 30 − 8``, and there are exactly 8.
     """
 
     CAPTURE = "capture"

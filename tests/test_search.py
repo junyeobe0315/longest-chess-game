@@ -59,10 +59,10 @@ class TestEvents:
                     assert victim.color != event.actor
             board.push(segment.critical_move)
 
-    def test_the_eight_overlaps_are_the_pawn_captures(self, events):
+    def test_there_are_exactly_eight_pawn_capture_events(self, events):
         """K ≤ 96 + 30 − 8: the 8 is pawn moves that are also captures."""
-        overlaps = [e for e in events if e.kind is EventKind.PAWN_CAPTURE]
-        assert len(overlaps) == 8
+        pawn_captures = [e for e in events if e.kind is EventKind.PAWN_CAPTURE]
+        assert len(pawn_captures) == 8
 
     def test_the_move_and_capture_counts_add_up_to_118(self, events):
         pawn_moves = sum(
@@ -71,11 +71,11 @@ class TestEvents:
             if e.kind in (EventKind.PAWN, EventKind.PROMOTION, EventKind.PAWN_CAPTURE)
         )
         captures = sum(1 for e in events if e.is_capture)
-        overlaps = sum(1 for e in events if e.kind is EventKind.PAWN_CAPTURE)
+        pawn_captures = sum(1 for e in events if e.kind is EventKind.PAWN_CAPTURE)
         mates = sum(1 for e in events if e.kind is EventKind.MATE)
         assert pawn_moves == 96
         assert captures == 29
-        assert pawn_moves + captures - overlaps + mates == 118
+        assert pawn_moves + captures - pawn_captures + mates == 118
 
     def test_the_observed_phases(self, events):
         assert [(c, hi - lo + 1) for c, lo, hi in phases(events)] == [

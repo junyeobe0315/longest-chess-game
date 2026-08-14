@@ -134,7 +134,7 @@ class TestTheCrossCheckIsInformative:
         """90, not 96 — the six moves of the pawn spent opening the home rank.
 
         That leaves K at 115. The margin used to read 6 under the false
-        `P ≤ 32 + 8f`, which charged this shape eight overlaps it does not need;
+        `P ≤ 32 + 8f`, which charged this shape eight pawn captures it does not need;
         the honest coupling charges five, and the margin is 3.
         """
         result = analyse_independently(Shape(("B", "W", "B")))
@@ -264,9 +264,9 @@ class TestTheCrossCheckCanDisagree:
         assert not analyse_independently(shape, target_k=118).feasible
         assert analyse_independently(shape, target_k=115).feasible
 
-    def test_overlaps_are_optimised_over_not_assumed(self):
+    def test_pawn_captures_are_optimised_over_not_assumed(self):
         """A shape that cannot reach 96 pawn moves needs fewer files resolved,
-        and must be charged fewer overlaps. Assuming eight understated its K and
+        and must be charged fewer pawn captures. Assuming eight understated its K and
         was how the two methods first came to disagree."""
         result = analyse_independently(Shape(("B", "W", "B")))
         assert "files resolved" in result.account

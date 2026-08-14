@@ -12,9 +12,9 @@ from long_chess.bound import (
     MAX_CAPTURES,
     MAX_CAPTURES_PLUS_CLOSING,
     MAX_CRITICAL_SEGMENTS,
-    MAX_PAWN_MINUS_OVERLAP,
+    MAX_NET_PAWN_MOVES,
     MAX_PAWN_MOVES,
-    MINIMUM_OVERLAPS,
+    MINIMUM_PAWN_CAPTURES,
     PAWN_STEPS,
     RESOLVED_ORIGIN_PAIR_MOVE_CAP,
     UNRESOLVED_ORIGIN_PAIR_MOVE_CAP,
@@ -25,7 +25,7 @@ from long_chess.bound import (
     ending_profiles,
     equality_conditions,
     equality_witnesses,
-    pawn_minus_overlap_bound,
+    net_pawn_move_bound,
     pawn_moves_ceiling,
     refutations,
     shapes_with_at_most,
@@ -233,7 +233,7 @@ class TestOriginPairCap:
 
 class TestFileLemma:
     def test_two_facing_pawns_cannot_both_get_past(self):
-        """What makes an unresolved file cost an overlap once both pawns have
+        """What makes an unresolved file cost a pawn capture once both pawns have
         to promote. The search is more permissive than chess — either pawn may
         move at any time — which makes unreachability a stronger statement."""
         assert not check_file_lemma().goal_reachable
@@ -262,12 +262,12 @@ class TestTerms:
         """The mating side must keep something to mate with."""
         assert MAX_CAPTURES == 29
 
-    def test_at_least_eight_overlaps_once_every_pawn_promotes(self):
-        assert MINIMUM_OVERLAPS == 8
+    def test_at_least_eight_pawn_captures_once_every_pawn_promotes(self):
+        assert MINIMUM_PAWN_CAPTURES == 8
 
 
-class TestPawnMinusOverlap:
-    """`P − O ≤ 88`, maximised over how many origin files are resolved."""
+class TestNetPawnMoves:
+    """`P − Cₚ ≤ 88`, maximised over how many origin files are resolved."""
 
     @pytest.mark.parametrize("resolved", range(FILES + 1))
     def test_the_ceiling_for_each_f(self, resolved: int):
@@ -277,18 +277,18 @@ class TestPawnMinusOverlap:
     @pytest.mark.parametrize("resolved", range(FILES + 1))
     def test_p_minus_o_never_exceeds_88(self, resolved: int):
         """With O ≥ f, the best this f can do is its ceiling less f."""
-        assert pawn_moves_ceiling(resolved) - resolved <= MAX_PAWN_MINUS_OVERLAP
+        assert pawn_moves_ceiling(resolved) - resolved <= MAX_NET_PAWN_MOVES
 
     def test_the_maximum_is_88_and_only_at_eight_resolved_files(self):
-        best = pawn_minus_overlap_bound()
-        assert best.value == MAX_PAWN_MINUS_OVERLAP == 88
+        best = net_pawn_move_bound()
+        assert best.value == MAX_NET_PAWN_MOVES == 88
         assert best.resolved_files == FILES == 8
         assert best.pawn_moves == 96
-        assert best.overlaps == 8
+        assert best.pawn_captures == 8
         ties = [
             resolved
             for resolved in range(FILES + 1)
-            if pawn_moves_ceiling(resolved) - resolved == MAX_PAWN_MINUS_OVERLAP
+            if pawn_moves_ceiling(resolved) - resolved == MAX_NET_PAWN_MOVES
         ]
         assert ties == [8]
 
@@ -324,7 +324,7 @@ class TestCriticalBound:
 
     def test_it_is_88_plus_30(self):
         bound = critical_bound()
-        assert bound.pawn_minus_overlap == 88
+        assert bound.net_pawn_moves == 88
         assert bound.captures_plus_closing == 30
 
     def test_the_trivial_ply_ceiling_before_the_switch_argument(self):
@@ -342,7 +342,7 @@ class TestEqualityConditions:
         equality = equality_conditions()
         assert equality.resolved_files == 8
         assert equality.pawn_moves == 96
-        assert equality.overlaps == 8
+        assert equality.pawn_captures == 8
         assert equality.captures_plus_closing == 30
 
     def test_every_pawn_makes_six_single_square_moves_and_promotes(self):
@@ -614,13 +614,13 @@ class TestAgainstTheKnownGame:
             if e.kind in (EventKind.PAWN, EventKind.PROMOTION, EventKind.PAWN_CAPTURE)
         )
         captures = sum(1 for e in events if e.is_capture)
-        overlaps = sum(1 for e in events if e.kind is EventKind.PAWN_CAPTURE)
+        pawn_captures = sum(1 for e in events if e.kind is EventKind.PAWN_CAPTURE)
         closing = sum(1 for e in events if e.kind is EventKind.MATE)
 
         assert pawn_moves == MAX_PAWN_MOVES
         assert captures == MAX_CAPTURES
-        assert overlaps == MINIMUM_OVERLAPS
-        assert pawn_moves - overlaps == MAX_PAWN_MINUS_OVERLAP
+        assert pawn_captures == MINIMUM_PAWN_CAPTURES
+        assert pawn_moves - pawn_captures == MAX_NET_PAWN_MOVES
         assert captures + closing == MAX_CAPTURES_PLUS_CLOSING
         assert len(events) == critical_bound().total == 118
 
@@ -628,8 +628,8 @@ class TestAgainstTheKnownGame:
         """It is the equality case, so it must satisfy every clause of one."""
         events = extract_events(compressed_skeleton)
         equality = equality_conditions()
-        overlaps = sum(1 for e in events if e.kind is EventKind.PAWN_CAPTURE)
-        assert overlaps == equality.overlaps == equality.resolved_files
+        pawn_captures = sum(1 for e in events if e.kind is EventKind.PAWN_CAPTURE)
+        assert pawn_captures == equality.pawn_captures == equality.resolved_files
 
     def test_the_known_game_attains_the_switch_bound(self, compressed_skeleton):
         from long_chess.search import phases

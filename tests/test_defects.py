@@ -237,7 +237,7 @@ class TestCheckmateBranchWasNotAModel:
         model, handles = build(Shape(("W", "B", "W")), target_k=3, ending="checkmate")
         model.add(handles.pawn_moves == 2)
         model.add(handles.total_captures == 1)
-        model.add(handles.overlaps == 0)
+        model.add(handles.pawn_captures == 0)
         model.add(handles.closing_segment == 0)
         assert solver.solve(model) in (cp_model.OPTIMAL, cp_model.FEASIBLE)
 
@@ -264,16 +264,16 @@ class TestCheckmateBranchWasNotAModel:
         model.add(lost == 15)
         assert solver.solve(model) == cp_model.INFEASIBLE
 
-    def test_overlaps_cannot_exceed_the_totals_they_are_part_of(self):
-        """`overlaps` had a floor but no ceiling, so a low target could be met
-        with more overlaps than pawn moves. Both bounds follow from an overlap
+    def test_pawn_captures_cannot_exceed_the_totals_they_are_part_of(self):
+        """`pawn_captures` had a floor but no ceiling, so a low target could be met
+        with more pawn captures than pawn moves. Both bounds follow from a pawn capture
         being a pawn move *and* a capture."""
         cp_model, solver = self.solver()
         from long_chess.model import Shape, build
 
         model, handles = build(Shape(("W", "B", "W")), target_k=3, ending="checkmate")
         model.add(handles.pawn_moves == 0)
-        model.add(handles.overlaps >= 1)
+        model.add(handles.pawn_captures >= 1)
         assert solver.solve(model) == cp_model.INFEASIBLE
 
     def test_the_cross_check_was_over_constrained_the_same_way(self):
@@ -338,9 +338,9 @@ class TestMatingSideIsTheLastEndpoint:
     )
 
     # What the game observes: P = 6 (e6, d5, and the h-pawn's four), C = 16
-    # (all 15 White units, plus the king taking the g2 pawn), O = 1 (hxg2),
+    # (all 15 White units, plus the king taking the g2 pawn), Cₚ = 1 (hxg2),
     # T = 1 (the mate is quiet), K = 6 + 16 - 1 + 1 = 22.
-    PROFILE = {"pawn_moves": 6, "captures": 16, "overlaps": 1, "closing": 1}
+    PROFILE = {"pawn_moves": 6, "captures": 16, "pawn_captures": 1, "closing": 1}
     TARGET_K = 22
 
     def test_the_game_is_legal_and_black_mates_quietly(self):
@@ -384,7 +384,7 @@ class TestMatingSideIsTheLastEndpoint:
         )
         model.add(handles.pawn_moves == self.PROFILE["pawn_moves"])
         model.add(handles.total_captures == self.PROFILE["captures"])
-        model.add(handles.overlaps == self.PROFILE["overlaps"])
+        model.add(handles.pawn_captures == self.PROFILE["pawn_captures"])
         model.add(handles.closing_segment == self.PROFILE["closing"])
         for colour, lost in (("W", 15), ("B", 1)):
             model.add(

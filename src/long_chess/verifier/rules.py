@@ -87,7 +87,7 @@ def is_critical(board: chess.Board, move: chess.Move) -> bool:
 
     A quiet final checkmate is neither, and this predicate says so. It still
     closes a segment — as the endpoint of the terminal quiet segment, the
-    closing-segment term `T` in `K = (P - O) + (C + T)` — because checkmate
+    closing-segment term `T` in `K = (P − Cₚ) + (C + T)` — because checkmate
     takes precedence over the 75-move draw (Art. 9.6.2). That accounting
     lives in the segment layer (`critical_count` and the paper's
     Definition 2.2), not here.

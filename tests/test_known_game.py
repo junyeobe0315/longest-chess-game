@@ -90,13 +90,13 @@ def test_no_position_occurs_five_times(result):
 
 
 def test_the_maximum_position_multiplicity_is_exactly_two(result):
-    """Appendix A claims more than "fivefold never fires": no position of the
-    game occurs even three times, the maximum multiplicity being exactly two.
+    """More is pinned than "fivefold never fires": no position of the game
+    occurs even three times, the maximum multiplicity being exactly two.
 
-    Nothing about the bound needs it — any value below five would do — but it is
-    what the paper says, so it is what gets pinned, and equality rather than an
-    inequality: a construction that started repeating positions three times over
-    would still pass every other check here.
+    Nothing about the bound needs it — any value below five would do — but it
+    is a measured property of the witness, so it gets pinned, and equality
+    rather than an inequality: a construction that started repeating positions
+    three times over would still pass every other check here.
     """
     assert max(record.repetitions for record in result.trace) == 2
 

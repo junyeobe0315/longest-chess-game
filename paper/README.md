@@ -23,19 +23,6 @@ Plain `pdflatex main.tex` twice also works — the bibliography is inline
 `SOURCE_DATE_EPOCH=0`, which pins the PDF's embedded timestamps: the
 committed PDF reproduces byte for byte from a clean checkout.
 
-## Figures
-
-The board diagrams under `figures/` are committed and regenerable:
-
-```bash
-uv run --with cairosvg python paper/figures/make_figures.py
-```
-
-The script replays the exact move sequences quoted in the paper, so the
-figures cannot drift from the text. The piece images embedded in the
-output are Colin M. L. Burnett's, used under the BSD option of their
-triple licence — see [figures/README.md](figures/README.md).
-
 ## Slides
 
 The talk decks live outside this repository, so that editing a slide does

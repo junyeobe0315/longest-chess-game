@@ -98,8 +98,8 @@ locked-pawn gap above is never appealed to in either direction.
 
 ## The second move generator
 
-Appendix B says what a sceptical reader has to trust. Two things are on
-the list: the summary of the FIDE termination rules, and — for the
+Two things are on the list of what a sceptical reader has to trust: the
+summary of the FIDE termination rules, and — for the
 mechanical checks only — move generation. The second item covers a lot of
 ground: the verifier pushes 17,697 moves through python-chess and asks it
 at every ply what is legal and whether the game has ended. If

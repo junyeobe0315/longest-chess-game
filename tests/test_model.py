@@ -45,7 +45,7 @@ class TestSoundness:
         assert (
             observation.total_pawn_moves,
             observation.total_captures,
-            observation.overlaps,
+            observation.pawn_captures,
             observation.closing_segment,
         ) == (96, 29, 8, 1)
         assert observation.k == 118
@@ -54,8 +54,8 @@ class TestSoundness:
         """P ≤ 80 + 2f with f ≤ O. The constraint that replaced the false
         `P ≤ 32 + 8f`, checked against a game that demonstrably exists."""
         observation = validate(compressed_skeleton).observation
-        assert observation.total_pawn_moves <= 80 + 2 * observation.overlaps
-        assert observation.total_pawn_moves - observation.overlaps <= 88
+        assert observation.total_pawn_moves <= 80 + 2 * observation.pawn_captures
+        assert observation.total_pawn_moves - observation.pawn_captures <= 88
         assert observation.total_captures + observation.closing_segment <= 30
 
     def test_the_shape_the_known_game_uses_is_feasible(self, results):
@@ -111,12 +111,12 @@ class TestFeasibility:
 
     @pytest.mark.parametrize("ending", ENDINGS)
     def test_a_feasible_solution_maxes_out_every_term(self, results, ending):
-        """K = 118 leaves no slack: P − O = 88 and C + T = 30, both forced."""
+        """K = 118 leaves no slack: P − Cₚ = 88 and C + T = 30, both forced."""
         solution = results[ending, ("B", "W", "B", "W")]
-        assert solution.pawn_moves - solution.overlaps == 88
+        assert solution.pawn_moves - solution.pawn_captures == 88
         assert solution.captures + solution.closing_segment == 30
         assert solution.pawn_moves == 96
-        assert solution.overlaps == 8
+        assert solution.pawn_captures == 8
 
     def test_the_solver_agrees_with_the_counting_proof(self, results):
         """`bound.blocks` refutes every S ≤ 2 shape without a solver. The model

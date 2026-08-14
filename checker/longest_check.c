@@ -12,8 +12,9 @@
  *
  *   Independence is the entire point, so this file was written without
  *   reading python-chess.  Where a rule is subtle, the governing FIDE
- *   article is cited in a comment: Art. 3.7 (pawn moves, en passant,
- *   promotion), Art. 3.8 (castling), Art. 5.2.2 (dead position), Art. 9.2.2
+ *   article is cited in a comment, numbered as in the Laws effective
+ *   1 January 2023: Art. 3.7 (pawn moves, en passant, promotion),
+ *   Art. 3.8 (castling), Art. 5.2.2 (dead position), Art. 9.2.2
  *   (identity of positions), Art. 9.6.1 / 9.6.2 (fivefold repetition and the
  *   75-move rule).
  *
@@ -140,7 +141,7 @@ enum { WHITE = 0, BLACK = 1 };
 #define PIECE_TYPE(piece) ((piece) & 7)
 #define PIECE_COLOUR(piece) (((piece) >> 3) & 1)
 
-/* Castling rights, one bit each (Art. 3.8b). */
+/* Castling rights, one bit each (Art. 3.8.2). */
 enum {
     CASTLE_WK = 1,  /* White may castle kingside  (e1-g1, rook h1) */
     CASTLE_WQ = 2,  /* White may castle queenside (e1-c1, rook a1) */
@@ -151,10 +152,10 @@ enum {
 /* Move flags.  A move carries at most one of these. */
 enum {
     MF_NORMAL       = 0,
-    MF_DOUBLE_PUSH  = 1,  /* pawn advanced two squares; sets the ep target */
-    MF_EN_PASSANT   = 2,  /* pawn captured en passant (Art. 3.7d)          */
-    MF_CASTLE_KING  = 4,  /* kingside castling (Art. 3.8b)                 */
-    MF_CASTLE_QUEEN = 8   /* queenside castling (Art. 3.8b)                */
+    MF_DOUBLE_PUSH  = 1, /* pawn advanced two squares; sets the ep target   */
+    MF_EN_PASSANT   = 2, /* pawn captured en passant (Art. 3.7.3.1-3.7.3.2) */
+    MF_CASTLE_KING  = 4, /* kingside castling (Art. 3.8.2)                  */
+    MF_CASTLE_QUEEN = 8  /* queenside castling (Art. 3.8.2)                 */
 };
 
 typedef struct {
@@ -191,7 +192,7 @@ static const int KING_DIRS[8]   = { -17, -16, -15,  -1,  1, 15, 16, 17 };
 static const int BISHOP_DIRS[4] = { -17, -15, 15, 17 };
 static const int ROOK_DIRS[4]   = { -16,  -1,  1, 16 };
 
-/* Promotion choices, Art. 3.7e: queen, rook, bishop or knight of the same
+/* Promotion choices, Art. 3.7.3.3: queen, rook, bishop or knight of the same
  * colour.  Underpromotions are distinct moves, which is exactly why perft
  * node counts explode once a pawn can reach the last rank. */
 static const int PROMOTION_PIECES[4] = { QUEEN, ROOK, BISHOP, KNIGHT };
@@ -374,7 +375,7 @@ static int parse_fen(Position *pos, const char *fen)
     }
     s++;
 
-    /* Field 3: castling availability (Art. 3.8b). */
+    /* Field 3: castling availability (Art. 3.8.2). */
     s = skip_spaces(s);
     if (*s == '-') {
         s++;
@@ -391,9 +392,9 @@ static int parse_fen(Position *pos, const char *fen)
         }
     }
 
-    /* Field 4: en passant target square (Art. 3.7d).  This names the square
-     * a capturing pawn would move TO, not the square the captured pawn is
-     * standing on. */
+    /* Field 4: en passant target square (Art. 3.7.3.1-3.7.3.2).  This
+     * names the square a capturing pawn would move TO, not the square the
+     * captured pawn is standing on. */
     s = skip_spaces(s);
     if (*s == '-') {
         s++;
@@ -560,7 +561,7 @@ static int is_square_attacked(const Position *pos, int sq, int by_colour)
 {
     int i, dir, scan, piece;
 
-    /* Pawns (Art. 3.7c): a pawn captures one square diagonally forward, so a
+    /* Pawns (Art. 3.7.3): a pawn captures one square diagonally forward, so a
      * white pawn attacking `sq` must stand on sq-17 or sq-15, and a black
      * pawn on sq+15 or sq+17. */
     if (by_colour == WHITE) {
@@ -655,7 +656,7 @@ static void add_pawn_move(Move *list, int *count, int from, int to,
     int i;
 
     if (RANK_OF(to) == promotion_rank) {
-        /* Art. 3.7e: the pawn must be exchanged, as part of the same move,
+        /* Art. 3.7.3.3: the pawn must be exchanged, as part of the same move,
          * for a queen, rook, bishop or knight of the same colour. */
         for (i = 0; i < 4; i++) {
             add_move(list, count, from, to, PROMOTION_PIECES[i], flags);
@@ -675,11 +676,11 @@ static void generate_pawn_moves(const Position *pos, int from, Move *list,
     int one = from + forward;
     int side;
 
-    /* Art. 3.7a: the pawn moves forward to the unoccupied square in front. */
+    /* Art. 3.7.1: the pawn moves forward to the unoccupied square in front. */
     if (ON_BOARD(one) && pos->board[one] == EMPTY) {
         add_pawn_move(list, count, from, one, promotion_rank, MF_NORMAL);
 
-        /* Art. 3.7b: from its original square it may instead advance two
+        /* Art. 3.7.2: from its original square it may instead advance two
          * squares, provided both are unoccupied. */
         if (RANK_OF(from) == start_rank) {
             int two = one + forward;
@@ -690,7 +691,7 @@ static void generate_pawn_moves(const Position *pos, int from, Move *list,
         }
     }
 
-    /* Art. 3.7c: the pawn captures diagonally forward. */
+    /* Art. 3.7.3: the pawn captures diagonally forward. */
     for (side = -1; side <= 1; side += 2) {
         int to = from + forward + side;
         int target;
@@ -705,11 +706,11 @@ static void generate_pawn_moves(const Position *pos, int from, Move *list,
             }
             continue;
         }
-        /* Art. 3.7d, en passant: a pawn that has just advanced two squares
-         * may be captured by an enemy pawn as though it had advanced only
-         * one.  The capture is onto the skipped square and is available on
-         * the immediately following move only, which is why ep_square is
-         * cleared by every other move. */
+        /* Art. 3.7.3.1-3.7.3.2, en passant: a pawn that has just advanced
+         * two squares may be captured by an enemy pawn as though it had
+         * advanced only one.  The capture is onto the skipped square and
+         * is available on the immediately following move only, which is
+         * why ep_square is cleared by every other move. */
         if (to == pos->ep_square) {
             add_move(list, count, from, to, EMPTY, MF_EN_PASSANT);
         }
@@ -758,7 +759,7 @@ static void generate_slide_moves(const Position *pos, int from, const int *dirs,
     }
 }
 
-/* Art. 3.8b.  Castling is a king move: the king moves two squares towards a
+/* Art. 3.8.2.  Castling is a king move: the king moves two squares towards a
  * rook on its own first rank, and that rook moves to the square the king has
  * just crossed.  It is unavailable if the king or that rook has already
  * moved (tracked by the rights bits), if any square between them is
@@ -935,7 +936,7 @@ static void make_move(Position *pos, Move move, Undo *undo)
         pos->board[rook_from] = EMPTY;
     }
 
-    /* The en passant target lives for exactly one ply (Art. 3.7d). */
+    /* The en passant target lives for exactly one ply (Art. 3.7.3.2). */
     if (move.flags & MF_DOUBLE_PUSH) {
         pos->ep_square = move.from + ((us == WHITE) ? 16 : -16);
     } else {
@@ -1220,7 +1221,7 @@ static void count_material(const Position *pos, Material out[2])
  * matter and it is tempting to think it does.  A bishop never leaves the colour
  * it stands on, so if every bishop on the board is dark then no light square is
  * ever attacked by anything but a king, and a king cannot deliver mate: the
- * mated king would have to stand beside it, which Art. 3.9 forbids for both.
+ * mated king would have to stand beside it, which Art. 3.9.2 forbids for both.
  * A mate would therefore need the mated king on a dark square with every light
  * square beside it covered, and only the enemy king can cover those.  A dark
  * square has at least two light neighbours, no two of which share a neighbour
@@ -1813,55 +1814,55 @@ typedef struct {
     const char *detail;   /* a move, or a move list; "" for the status kinds */
 } RuleCase;
 
-/* Article shorthand used below:
- *   3.7d  en passant           3.7e  promotion       3.8b  castling
- *   3.9   check, and the ban on leaving or exposing one's own king to it
- *   5.1.1 checkmate            5.2.1 stalemate                            */
+/* Sub-article numbers below follow the FIDE Laws effective 1 January 2023:
+ *   3.7.3.1-3.7.3.2  en passant    3.7.3.3  promotion    3.8.2  castling
+ *   3.9   check; 3.9.2 the ban on leaving or exposing one's own king to it
+ *   5.1.1 checkmate                5.2.1    stalemate                     */
 static const RuleCase RULE_CASES[] = {
 
-    /* --- En passant, Art. 3.7d, and the self-check ban of Art. 3.9 ------ */
+    /* --- En passant, Art. 3.7.3.1-3.7.3.2, self-check ban Art. 3.9.2 ---- */
 
     /* Both pawns leave the fifth rank in the same move.  With the white king
      * on a5 and a black rook on h5, removing the black d5 pawn AND the white
      * e5 pawn opens the whole rank onto the king, so exd6 e.p. leaves the
-     * mover's own king in check and Art. 3.9 forbids it.  Nothing else on
+     * mover's own king in check and Art. 3.9.2 forbids it.  Nothing else on
      * the board changes -- this is the case a generator that special-cases
      * pins by ray, rather than by make/test/unmake, gets wrong. */
-    { "ep-rank-pin-illegal", "Art. 3.9",
+    { "ep-rank-pin-illegal", "Art. 3.9.2",
       "8/8/8/K2pP2r/8/8/8/7k w - d6 0 1", "",
       RC_ILLEGAL, "e5d6" },
 
     /* The same position stated exhaustively, so the missing e.p. capture is
      * an absence a reader can see rather than one they have to trust.  Kb5
      * IS legal: the white e5 pawn still blocks the rook's rank. */
-    { "ep-rank-pin-moveset", "Art. 3.9",
+    { "ep-rank-pin-moveset", "Art. 3.9.2",
       "8/8/8/K2pP2r/8/8/8/7k w - d6 0 1", "",
       RC_MOVESET, "a5a4 a5a6 a5b4 a5b5 a5b6 e5e6" },
 
     /* Contrast, identical but for the king standing on a4 instead of a5.
      * The rank the two pawns vacate is now not the king's rank, so the same
-     * capture is legal.  Art. 3.7d in its ordinary form. */
-    { "ep-legal-contrast", "Art. 3.7d",
+     * capture is legal.  Art. 3.7.3.1 in its ordinary form. */
+    { "ep-legal-contrast", "Art. 3.7.3.1",
       "8/8/8/3pP2r/K7/8/8/7k w - d6 0 1", "",
       RC_LEGAL, "e5d6" },
 
-    /* --- Castling, Art. 3.8b ------------------------------------------- */
+    /* --- Castling, Art. 3.8.2 ------------------------------------------- */
 
     /* Control for the three cases below: the black rook is on h8, which
      * attacks none of e1, f1, g1, so kingside castling is available. */
-    { "castle-baseline", "Art. 3.8b",
+    { "castle-baseline", "Art. 3.8.2",
       "k6r/8/8/8/8/8/8/4K2R w K - 0 1", "",
       RC_LEGAL, "e1g1" },
 
     /* Rook on f8 attacks f1, the square the king must CROSS.  e1 and g1 are
      * both free, so this case isolates the crossing condition alone. */
-    { "castle-through-attack", "Art. 3.8b",
+    { "castle-through-attack", "Art. 3.8.2",
       "k4r2/8/8/8/8/8/8/4K2R w K - 0 1", "",
       RC_ILLEGAL, "e1g1" },
 
     /* Rook on e8 gives check.  A king in check may not castle out of it;
      * f1 and g1 are unattacked, so only the check explains the refusal. */
-    { "castle-while-in-check", "Art. 3.8b",
+    { "castle-while-in-check", "Art. 3.8.2",
       "k3r3/8/8/8/8/8/8/4K2R w K - 0 1", "",
       RC_ILLEGAL, "e1g1" },
 
@@ -1869,26 +1870,26 @@ static const RuleCase RULE_CASES[] = {
      * Art. 3.9 alone this would already be illegal as a king move; it is
      * listed separately because castling is generated as its own move and a
      * generator can easily forget to test the destination. */
-    { "castle-into-attack", "Art. 3.8b",
+    { "castle-into-attack", "Art. 3.8.2",
       "k5r1/8/8/8/8/8/8/4K2R w K - 0 1", "",
       RC_ILLEGAL, "e1g1" },
 
     /* Queenside, and the one implementations most often get wrong: the black
-     * rook on b8 attacks b1, which the ROOK crosses.  Art. 3.8b constrains
+     * rook on b8 attacks b1, which the ROOK crosses.  Art. 3.8.2 constrains
      * only the squares the KING stands on, crosses, and occupies -- e1, d1,
      * c1 here, all free -- so 0-0-0 is legal. */
-    { "castle-rook-path-attacked", "Art. 3.8b",
+    { "castle-rook-path-attacked", "Art. 3.8.2",
       "1r5k/8/8/8/8/8/8/R3K3 w Q - 0 1", "",
       RC_LEGAL, "e1c1" },
 
     /* The same claim with the colours swapped, so a white/black asymmetry in
      * the castling code cannot hide behind the case above. */
-    { "castle-rook-path-black", "Art. 3.8b",
+    { "castle-rook-path-black", "Art. 3.8.2",
       "r3k3/8/8/8/8/8/8/1R5K b q - 0 1", "",
       RC_LEGAL, "e8c8" },
 
     /* Control for the case below: with nothing having moved, White castles. */
-    { "castle-rights-baseline", "Art. 3.8b",
+    { "castle-rights-baseline", "Art. 3.8.2",
       "b3k3/8/8/8/7R/8/8/4K2R w K - 0 1", "",
       RC_LEGAL, "e1g1" },
 
@@ -1899,16 +1900,16 @@ static const RuleCase RULE_CASES[] = {
      * precondition for 0-0 is restored; only the lost right forbids it, so
      * this case fails if update_castling_rights() ignores the destination
      * square of a capture. */
-    { "castle-rook-captured", "Art. 3.8b",
+    { "castle-rook-captured", "Art. 3.8.2",
       "b3k3/8/8/8/7R/8/8/4K2R b K - 0 1", "a8h1 h4h1 e8e7",
       RC_ILLEGAL, "e1g1" },
 
-    /* --- Promotion, Art. 3.7e ------------------------------------------ */
+    /* --- Promotion, Art. 3.7.3.3 ---------------------------------------- */
 
     /* The promoted piece acts from its new square at once, so b8=Q gives
      * check along the eighth rank.  Black still has Kd7, Ke7 and Kf7, so the
      * expectation is check and specifically NOT mate. */
-    { "promotion-gives-check", "Art. 3.7e",
+    { "promotion-gives-check", "Art. 3.7.3.3",
       "4k3/1P6/8/8/8/8/8/4K3 w - - 0 1", "b7b8q",
       RC_CHECK, "" },
 
@@ -1918,7 +1919,7 @@ static const RuleCase RULE_CASES[] = {
      * blocked, and the knight on f8 is untouchable: the bishop on g8 is a
      * light-squared bishop and f8 is dark, and the rook on h8 is shut in
      * behind it.  Mate. */
-    { "underpromotion-knight-mate", "Art. 3.7e",
+    { "underpromotion-knight-mate", "Art. 3.7.3.3",
       "6br/5Ppk/8/6K1/8/8/8/8 w - - 0 1", "f7f8n",
       RC_CHECKMATE, "" },
 
@@ -1926,7 +1927,7 @@ static const RuleCase RULE_CASES[] = {
      * bears on the eighth rank, the f-file and the two diagonals, and h7 is
      * on none of them, so it is not even check.  This is why the four
      * promotion choices have to be generated as four distinct moves. */
-    { "queen-promotion-not-mate", "Art. 3.7e",
+    { "queen-promotion-not-mate", "Art. 3.7.3.3",
       "6br/5Ppk/8/6K1/8/8/8/8 w - - 0 1", "f7f8q",
       RC_NEITHER, "" },
 
@@ -2308,10 +2309,10 @@ static void material_scan(void)
 /*   [H2] a move onto an occupied square is a capture of an ENEMY piece      */
 /*   [H5] a move changes the occupancy of its own from- and to-squares and   */
 /*        of no others, except the rook's two squares when castling          */
-/*        (Art. 3.8b) and the captured pawn's square when capturing en       */
-/*        passant (Art. 3.7d)                                                */
+/*        (Art. 3.8.2) and the captured pawn's square when capturing         */
+/*        en passant (Art. 3.7.3.1-3.7.3.2)                                  */
 /*   [H6] a pawn advances exactly one rank, or two from its OWN home rank    */
-/*        only (Art. 3.7a, Art. 3.7b)                                        */
+/*        only (Art. 3.7.1, Art. 3.7.2)                                      */
 /*                                                                          */
 /* No enumeration settles a claim about every position, and nothing below    */
 /* pretends to.  These four are read off the Laws; what a corpus can do is   */
@@ -2493,8 +2494,8 @@ static void corpus_check_h2(Obligation *ob, Position *pos, const Move *legal,
 }
 
 /* [H5] A move changes the occupancy of its own from- and to-squares and of no
- * others -- except the rook's two squares when castling (Art. 3.8b) and the
- * captured pawn's square when capturing en passant (Art. 3.7d).
+ * others -- except the rook's two squares when castling (Art. 3.8.2) and the
+ * captured pawn's square when capturing en passant (Art. 3.7.3.1-3.7.3.2).
  *
  * The check is literal: photograph the board, make the move, compare every
  * slot, unmake.  All 128 slots of the 0x88 array are compared and not just
@@ -2536,7 +2537,7 @@ static void corpus_check_h5(Obligation *ob, Position *pos, const Move *legal,
         allowed[nallowed++] = move.to;
 
         if (move.flags & (MF_CASTLE_KING | MF_CASTLE_QUEEN)) {
-            /* Art. 3.8b: the rook leaves its corner and lands on the square
+            /* Art. 3.8.2: the rook leaves its corner and lands on the square
              * the king crossed.  Both squares are taken from the move's own
              * geometry rather than from a table, so the exemption is exactly
              * as wide as the rule and no wider. */
@@ -2546,8 +2547,9 @@ static void corpus_check_h5(Obligation *ob, Position *pos, const Move *legal,
             allowed[nallowed++] = SQUARE_OF(kingside ? 7 : 0, back);
             allowed[nallowed++] = SQUARE_OF(kingside ? 5 : 3, back);
         } else if (move.flags & MF_EN_PASSANT) {
-            /* Art. 3.7d: the captured pawn stands beside the capturing pawn,
-             * not on the square the capturing pawn moves to. */
+            /* Art. 3.7.3.1-3.7.3.2: the captured pawn stands beside
+             * the capturing pawn, not on the square the capturing pawn
+             * moves to. */
             allowed[nallowed++] =
                 move.to + ((pos->side_to_move == WHITE) ? -16 : 16);
         }
@@ -2588,7 +2590,7 @@ static void corpus_check_h5(Obligation *ob, Position *pos, const Move *legal,
 
 /* [H6] A pawn advances exactly one rank, or two from its own home rank only.
  *
- * Art. 3.7a gives the single step, Art. 3.7b the double, and the double only
+ * Art. 3.7.1 gives the single step, Art. 3.7.2 the double, and the double only
  * "provided [the pawn] has not yet moved" -- which is to say, only from the
  * rank it started on.  Note that this is about the RANK the pawn crosses, so
  * a diagonal capture and a straight push are the same case here. */
@@ -3115,7 +3117,7 @@ static int parse_san_token(const PgnReader *r, int ply, const char *token,
     memcpy(body, token, len);
     body[len] = '\0';
 
-    /* Castling, Art. 3.8b.  PGN spells it with the letter O; digits are
+    /* Castling, Art. 3.8.2.  PGN spells it with the letter O; digits are
      * accepted too because the two are widely confused in the wild. */
     if (strcmp(body, "O-O-O") == 0 || strcmp(body, "0-0-0") == 0) {
         san->piece_type = KING;
@@ -3137,12 +3139,12 @@ static int parse_san_token(const PgnReader *r, int ply, const char *token,
         }
     }
 
-    /* Promotion, Art. 3.7e.  "=Q" is always the last thing in the token. */
+    /* Promotion, Art. 3.7.3.3.  "=Q" is always the last thing in the token. */
     if (len >= 2 && body[len - 2] == '=') {
         san->promotion = san_piece_from_letter(body[len - 1]);
         if (san->promotion == EMPTY || san->promotion == KING) {
             return san_error(r, ply, token,
-                             "a pawn promotes to Q, R, B or N (Art. 3.7e)");
+                             "a pawn promotes to Q, R, B or N (Art. 3.7.3.3)");
         }
         len -= 2;
         body[len] = '\0';
@@ -3242,7 +3244,7 @@ static int resolve_san(const PgnReader *r, Position *pos, const SanMove *san,
             }
             /* The 'x' is treated as information, not decoration.  An en
              * passant capture counts even though its destination square is
-             * empty (Art. 3.7d). */
+             * empty (Art. 3.7.3.1-3.7.3.2). */
             captures = (pos->board[move.to] != EMPTY) ||
                        ((move.flags & MF_EN_PASSANT) != 0);
             if (captures != san->is_capture) {

@@ -1,27 +1,38 @@
 # The maximum length of a chess game is 17,697 plies
 
-[![tests](https://github.com/junyeobe0315/long_chess/actions/workflows/tests.yml/badge.svg)](https://github.com/junyeobe0315/long_chess/actions/workflows/tests.yml)
+[![tests](https://github.com/junyeobe0315/longest-chess-game/actions/workflows/tests.yml/badge.svg)](https://github.com/junyeobe0315/longest-chess-game/actions/workflows/tests.yml)
 ![python](https://img.shields.io/badge/python-3.13-blue)
+![c99](https://img.shields.io/badge/C-C99-blue)
 ![category](https://img.shields.io/badge/category-combinatorics_(math.CO)-blueviolet)
 ![reviewed](https://img.shields.io/badge/peer%20reviewed-no-orange)
 [![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.21828025-blue)](https://doi.org/10.5281/zenodo.21828025)
 
 Companion repository for the paper
 
-> **The maximum length of a chess game under the FIDE Laws is 17,697
-> plies** — Junyeop Yim.
+> **The maximum length of a chess game under the 2023 FIDE Laws**
+> — Junyeop Yim.
 > [paper/main.pdf](paper/main.pdf) · source: [paper/](paper/)
 
-**The proof lives in the paper.** Tom Murphy VII built a 17,697-ply legal
-game ([SIGBOVIK 2020](https://tom7.org/chess/longest.pdf)) and left open
-whether the arithmetic ceiling of 17,699 is reachable. The paper proves it
-is not: no legal chess game exceeds 17,697 plies, so the constructed game
-is longest possible.
+**The upper-bound proof lives in the paper, and it is a hand proof.**
+François Labelle and Tom Murphy VII constructed legal games of 17,697
+plies ([Labelle 2015](https://wismuth.com/chess/longest-game.html),
+[SIGBOVIK 2020](https://tom7.org/chess/longest.pdf)), and Murphy's
+scheduling analysis gave an arithmetic ceiling of 17,699, leaving a
+two-ply gap. The paper closes it: partitioning play at pawn moves and
+captures yields at most 118 segments, each segment has at most 150 plies,
+and a game with all 118 segments must change the colour of successive
+segment endpoints at least three times — so no legal game exceeds
+150·118 − 3 = 17,697 plies, and the known constructions are optimal.
+Moreover, in every maximum-length game all sixteen pawns make six
+one-rank moves and promote.
 
-This repository is the supporting evidence. It exhausts the paper's finite
-case analyses by machine, verifies the 17,697-ply witness move by move under
-an independent implementation of the termination rules, and re-decides the
-central case analysis by two further methods.
+This repository is the supporting evidence. It holds the move-by-move
+replay verification of Murphy's 17,697-ply witness that the paper's
+sharpness proposition cites — performed twice, under two independently
+implemented rule sets — machine-checks the finite claims behind the
+paper's lemmas, and re-derives the central segment-scheduling bound by
+CP-SAT and arithmetic cross-checks. None of these computations enters
+the upper-bound proof.
 
 ## Verify
 
@@ -46,11 +57,12 @@ cross-check skips. Both are cross-checks on a proof that stands without them.
 [CLAIMS.md](CLAIMS.md) maps each statement of the paper to the code that
 decides it and the test that pins it.
 
-The mechanical checks are not the proof — the paper's argument is a hand
-argument and is checkable without running anything here. What a sceptical
-reader must trust is stated precisely in the paper's Appendix B: this
-project's summary of the FIDE termination rules, and, for the mechanical
-checks only, move generation. The second item is not a single library:
+The mechanical checks are not the upper-bound proof — the paper's argument
+is a hand argument and is checkable without running anything here. The one
+place the paper cites this repository is the sharpness proposition, for the
+replay verification of the witness. What a sceptical reader must trust
+here: this project's summary of the FIDE termination rules, and, for the
+mechanical checks only, move generation. The second item is not a single library:
 `checker/` re-verifies the witness in C99 without python-chess, so what
 remains is the proposition that two independently implemented generators do
 not fail identically. Both were written by the same author from the same
@@ -66,14 +78,14 @@ paper/                     the manuscript (main artifact)
 CLAIMS.md                  paper statement -> code -> test map
 src/long_chess/verifier/   independent FIDE judge; imports nothing else here
 src/long_chess/bound/      the finite checks behind the proof's lemmas
-src/long_chess/model/      CP-SAT + arithmetic cross-checks (paper App. B)
+src/long_chess/model/      CP-SAT + arithmetic cross-checks (outside the proof)
 src/long_chess/skeleton/   critical-segment representation of the witness
 src/long_chess/search/     critical-event scheduling analysis
 checker/                   a second move generator: one C99 file, no python-chess
 tests/                     the ~5 s suite
 scripts/                   one entry point per check
 data/                      witness and skeletons (provenance: data/README.md)
-docs/                      the audit record behind Appendices A-B
+docs/                      the audit record for the mechanical checks
 ```
 
 `verifier/` deliberately depends on nothing else in the package: a move
@@ -89,13 +101,11 @@ peer reviewed.
 ## License
 
 The repository's own code, documentation and generated data are
-[MIT-licensed](LICENSE). Three exceptions: `data/longest.pgn` and
+[MIT-licensed](LICENSE). Two exceptions: `data/longest.pgn` and
 `data/skeleton_reference.txt` are Tom Murphy VII's published artefacts,
-redistributed with attribution (see [data/README.md](data/README.md)); the
-manuscript under [paper/](paper/) is not covered by the code license — its
-license is chosen at submission; and the board-diagram PDFs under
-`paper/figures/` embed piece images by Colin M. L. Burnett (GFDL/BSD/GPL),
-used under the BSD option — see [paper/figures/README.md](paper/figures/README.md).
+redistributed with attribution (see [data/README.md](data/README.md)); and
+the manuscript under [paper/](paper/) is not covered by the code license —
+its license is chosen at submission.
 
 ## Attribution
 
@@ -104,8 +114,19 @@ the published game and the skeleton inside
 [`longest.cc`](https://sourceforge.net/p/tom7misc/svn/HEAD/tree/trunk/chess/longest.cc)
 respectively. They are included so the results reproduce offline.
 
-The author ran into the problem through the YouTube videos of the developer
-of [Augment Chess](https://augmentchess.org/) (증강체스) —
+## Acknowledgements
+
+As in the paper: Tom Murphy VII's construction and question motivated this
+work, and he kindly commented on a draft, as did Alexis Langlois-Rémillard.
+The author is deeply grateful to Jinwan Park for generously taking the time
+to discuss this work and for valuable advice and encouragement, and thanks
+François Labelle for his detailed historical account of the longest-game
+problem.
+
+The author first ran into the problem through the YouTube videos of
+[잉체스 (Ingchess)](https://www.youtube.com/channel/UCTNbJ4fyXuIXd_ppmPXyPoQ),
+a chess YouTuber and the developer of
+[Augment Chess](https://augmentchess.org/) (증강체스) —
 [the short](https://www.youtube.com/shorts/ta6hvZS34ro) ·
 [the full video](https://www.youtube.com/watch?v=198K9TPT7KI) — whose
 description links Labelle's page.
@@ -113,6 +134,7 @@ description links Labelle's page.
 ## References
 
 - Murphy VII, [*Is this the longest chess game?*](https://tom7.org/chess/longest.pdf) (SIGBOVIK 2020)
+- Labelle, [*The longest possible chess game, and bounds on the number of possible chess games*](https://wismuth.com/chess/longest-game.html) (2015, updated 2020)
 - [FIDE Laws of Chess](https://handbook.fide.com/chapter/e012023), Articles 5.2.2, 9.6.1, 9.6.2
 - Tromp, [*The longest chess game*](https://tromp.github.io/chess/longest.html) (summary note)
 - [python-chess](https://python-chess.readthedocs.io/en/latest/core.html) ·

@@ -93,7 +93,7 @@ class Solution:
     status: str
     pawn_moves: int = 0
     captures: int = 0
-    overlaps: int = 0
+    pawn_captures: int = 0
     closing_segment: int = 0
     """Whether there were quiet moves after the last critical one.
 
@@ -105,7 +105,12 @@ class Solution:
 
     @property
     def k(self) -> int:
-        return self.pawn_moves + self.captures - self.overlaps + self.closing_segment
+        return (
+            self.pawn_moves
+            + self.captures
+            - self.pawn_captures
+            + self.closing_segment
+        )
 
 
 @dataclass
@@ -118,7 +123,7 @@ class Handles:
     capture_block: dict
     pawn_moves: cp_model.IntVar
     total_captures: cp_model.IntVar
-    overlaps: cp_model.IntVar
+    pawn_captures: cp_model.IntVar
     closing_segment: cp_model.IntVar
 
 
@@ -127,7 +132,7 @@ def build(
     *,
     target_k: int = TARGET_K,
     home_rank_limit: bool = True,
-    overlap_floor: int | None = None,
+    pawn_capture_floor: int | None = None,
     ending: str = CHECKMATE,
 ) -> tuple[cp_model.CpModel, Handles]:
     """The model for one block shape, unsolved.
@@ -277,20 +282,20 @@ def build(
                 )
 
     # --- the K identity ---------------------------------------------------
-    # Overlaps are not a free axiom. The two pawns that start on file i are its
+    # Pawn captures are not a free axiom. The two pawns that start on file i are its
     # *origin pair*, and the file is resolved when one of those two itself makes
     # a diagonal pawn move — which is the only way a pawn changes file, and is
-    # therefore a capture, and therefore an overlap. An unresolved pair is
+    # therefore a capture, and therefore a pawn capture. An unresolved pair is
     # capped at ten combined moves and a resolved one at twelve, so with
     # `resolved` files resolved:
     #
     #     pawn moves ≤ 10·(8 − resolved) + 12·resolved = 80 + 2·resolved
-    #     overlaps   ≥ resolved
+    #     pawn_captures   ≥ resolved
     #
     # Coupling them is what forces all eight files to be resolved when K = 118,
-    # rather than asserting `overlaps ≥ 8` outright. Asserting it was wrong in
+    # rather than asserting `pawn_captures ≥ 8` outright. Asserting it was wrong in
     # the permissive direction: a shape that cannot reach 96 pawn moves needs
-    # fewer files resolved, so charging it eight overlaps understates its K.
+    # fewer files resolved, so charging it eight pawn captures understates its K.
     #
     # The unresolved cap was 4 here until it was found to be false — a pawn
     # whose opposite number is captured by some other piece runs on alone. See
@@ -302,19 +307,19 @@ def build(
         pawn_moves
         <= UNRESOLVED_ORIGIN_PAIR_MOVE_CAP * FILES + per_resolved * resolved
     )
-    overlaps = model.new_int_var(0, MAX_PAWN_MOVES, "overlaps")
-    model.add(overlaps >= resolved)
-    # An overlap is a pawn move *and* a capture, so it is bounded by both. Both
+    pawn_captures = model.new_int_var(0, MAX_PAWN_MOVES, "pawn_captures")
+    model.add(pawn_captures >= resolved)
+    # A pawn capture is a pawn move *and* a capture, so it is bounded by both. Both
     # are implied by legality, so imposing them excludes no legal game — and
-    # without them the solver could answer a low `target_k` with more overlaps
+    # without them the solver could answer a low `target_k` with more pawn_captures
     # than pawn moves, which is permissive (safe) but makes the reported maxima
     # describe nothing.
-    model.add(overlaps <= pawn_moves)
-    model.add(overlaps <= total_captures)
-    if overlap_floor is not None:
-        model.add(overlaps >= overlap_floor)
+    model.add(pawn_captures <= pawn_moves)
+    model.add(pawn_captures <= total_captures)
+    if pawn_capture_floor is not None:
+        model.add(pawn_captures >= pawn_capture_floor)
 
-    model.add(pawn_moves + total_captures - overlaps + closing == target_k)
+    model.add(pawn_moves + total_captures - pawn_captures + closing == target_k)
 
     return model, Handles(
         moves=moves,
@@ -323,7 +328,7 @@ def build(
         capture_block=capture_block,
         pawn_moves=pawn_moves,
         total_captures=total_captures,
-        overlaps=overlaps,
+        pawn_captures=pawn_captures,
         closing_segment=closing,
     )
 
@@ -333,7 +338,7 @@ def solve(
     *,
     target_k: int = TARGET_K,
     home_rank_limit: bool = True,
-    overlap_floor: int | None = None,
+    pawn_capture_floor: int | None = None,
     ending: str = CHECKMATE,
     time_limit: float = 60.0,
 ) -> Solution:
@@ -343,7 +348,7 @@ def solve(
         shape,
         target_k=target_k,
         home_rank_limit=home_rank_limit,
-        overlap_floor=overlap_floor,
+        pawn_capture_floor=pawn_capture_floor,
         ending=ending,
     )
 
@@ -366,7 +371,7 @@ def solve(
         status=name,
         pawn_moves=solver.value(handles.pawn_moves),
         captures=solver.value(handles.total_captures),
-        overlaps=solver.value(handles.overlaps),
+        pawn_captures=solver.value(handles.pawn_captures),
         closing_segment=solver.value(handles.closing_segment),
         moves_by_pawn={
             f"{colour}{index}": [

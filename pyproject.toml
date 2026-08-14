@@ -1,7 +1,7 @@
 [project]
 name = "long-chess"
-version = "1.1.0"
-description = "Companion repository for 'The maximum length of a chess game under the FIDE Laws is 17,697 plies'"
+version = "1.2.0"
+description = "Companion repository for 'The maximum length of a chess game under the 2023 FIDE Laws'"
 readme = "README.md"
 license = "MIT"
 authors = [
@@ -13,7 +13,7 @@ dependencies = [
 ]
 
 [project.urls]
-Repository = "https://github.com/junyeobe0315/long_chess"
+Repository = "https://github.com/junyeobe0315/longest-chess-game"
 
 [project.optional-dependencies]
 solver = [
@@ -35,17 +35,6 @@ line-length = 88
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
-
-# paper/ is the manuscript tree. The only Python in it regenerates the
-# manuscript's figures; nothing there is imported by the package, exercised by
-# the tests, or on any path a claim in CLAIMS.md depends on. That script holds
-# wide dict and comprehension literals, so the 88-column limit is not enforced
-# on it and
-# `make lint` stays a statement about the code the claims actually rest on.
-# Every other rule — unused names, mutable defaults, import order — still
-# applies there, and scripts/, src/, tests/ and checker/ keep the full set.
-[tool.ruff.lint.per-file-ignores]
-"paper/**/*.py" = ["E501"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

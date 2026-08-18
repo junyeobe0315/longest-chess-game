@@ -22,8 +22,8 @@ keywords:
   - combinatorics
   - longest chess game
   - computer-assisted proof
-version: 1.2.0
-date-released: "2026-08-14"
+version: 1.2.1
+date-released: "2026-08-18"
 doi: 10.5281/zenodo.21828025
 preferred-citation:
   type: article

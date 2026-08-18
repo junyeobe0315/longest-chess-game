@@ -1,8 +1,8 @@
 # GitHub renders a "Cite this repository" button from this file.
 #
-# One placeholder remains: the arXiv identifier in preferred-citation,
-# added once the preprint is posted. The doi below is the Zenodo *concept*
-# DOI, which always resolves to the latest version; the paper cites it too.
+# The doi below is the Zenodo *concept* DOI, which always resolves to the
+# latest version; the paper cites it too. The paper itself is
+# arXiv:2608.14762 (see preferred-citation).
 cff-version: 1.2.0
 message: >-
   Please cite the paper (see preferred-citation below). Cite the software
@@ -26,19 +26,18 @@ version: 1.2.0
 date-released: "2026-08-14"
 doi: 10.5281/zenodo.21828025
 preferred-citation:
-  type: unpublished
+  type: article
   title: "The maximum length of a chess game under the 2023 FIDE Laws"
   authors:
     - family-names: Yim
       given-names: Junyeop
       email: junyeobe0315@smail.kongju.ac.kr
   year: 2026
+  identifiers:
+    - type: other
+      value: "arXiv:2608.14762"
+      description: arXiv preprint
+  url: "https://arxiv.org/abs/2608.14762"
   notes: >-
-    Draft manuscript, available as paper/main.pdf in this repository. An
-    arXiv identifier will be added here once the preprint is posted.
-  # Once posted to arXiv, replace type/notes above with:
-  #   type: article
-  #   identifiers:
-  #     - type: other
-  #       value: "arXiv:XXXX.XXXXX"
-  #       description: arXiv preprint
+    Preprint, arXiv:2608.14762 (2026). Not yet peer reviewed. The source
+    is also kept as paper/main.tex in this repository.

@@ -5,12 +5,13 @@
 ![c99](https://img.shields.io/badge/C-C99-blue)
 ![category](https://img.shields.io/badge/category-combinatorics_(math.CO)-blueviolet)
 ![reviewed](https://img.shields.io/badge/peer%20reviewed-no-orange)
+[![arXiv](https://img.shields.io/badge/arXiv-2608.14762-b31b1b)](https://arxiv.org/abs/2608.14762)
 [![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.21828025-blue)](https://doi.org/10.5281/zenodo.21828025)
 
 Companion repository for the paper
 
 > **The maximum length of a chess game under the 2023 FIDE Laws**
-> — Junyeop Yim.
+> — Junyeop Yim, [arXiv:2608.14762](https://arxiv.org/abs/2608.14762) (2026).
 > [paper/main.pdf](paper/main.pdf) · source: [paper/](paper/)
 
 **The upper-bound proof lives in the paper, and it is a hand proof.**
@@ -94,9 +95,10 @@ sharing code with the search would not be independent evidence.
 
 ## Citing
 
-Cite the **paper**, not the repository; [CITATION.cff](CITATION.cff) carries
-this preference machine-readably. The manuscript is a draft and has not been
-peer reviewed.
+Cite the **paper** — [arXiv:2608.14762](https://arxiv.org/abs/2608.14762) —
+not the repository; [CITATION.cff](CITATION.cff) carries this preference
+machine-readably. The manuscript is a preprint and has not been peer
+reviewed.
 
 ## License
 
